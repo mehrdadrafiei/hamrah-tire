@@ -1,0 +1,257 @@
+{
+  "info": {
+      "name": "Hamrah Tire API",
+      "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+      {
+          "key": "base_url",
+          "value": "http://localhost:8000",
+          "type": "string"
+      }
+  ],
+  "item": [
+      {
+          "name": "Authentication",
+          "item": [
+              {
+                  "name": "Login",
+                  "request": {
+                      "method": "POST",
+                      "url": "{{base_url}}/api/auth/token/",
+                      "header": [
+                          {
+                              "key": "Content-Type",
+                              "value": "application/json"
+                          }
+                      ],
+                      "body": {
+                          "mode": "raw",
+                          "raw": "{\n    \"username\": \"admin_user\",\n    \"password\": \"password123\"\n}"
+                      }
+                  }
+              },
+              {
+                  "name": "Refresh Token",
+                  "request": {
+                      "method": "POST",
+                      "url": "{{base_url}}/api/auth/token/refresh/",
+                      "header": [
+                          {
+                              "key": "Content-Type",
+                              "value": "application/json"
+                          }
+                      ],
+                      "body": {
+                          "mode": "raw",
+                          "raw": "{\n    \"refresh\": \"{{refresh_token}}\"\n}"
+                      }
+                  }
+              }
+          ]
+      },
+      {
+          "name": "Users",
+          "item": [
+              {
+                  "name": "List Users",
+                  "request": {
+                      "method": "GET",
+                      "url": "{{base_url}}/api/users/",
+                      "auth": {
+                          "type": "bearer",
+                          "bearer": "{{access_token}}"
+                      }
+                  }
+              },
+              {
+                  "name": "Create User",
+                  "request": {
+                      "method": "POST",
+                      "url": "{{base_url}}/api/users/",
+                      "auth": {
+                          "type": "bearer",
+                          "bearer": "{{access_token}}"
+                      },
+                      "header": [
+                          {
+                              "key": "Content-Type",
+                              "value": "application/json"
+                          }
+                      ],
+                      "body": {
+                          "mode": "raw",
+                          "raw": "{\n    \"username\": \"new_user\",\n    \"email\": \"new@example.com\",\n    \"password\": \"userpass123\",\n    \"role\": \"MINER\",\n    \"phone\": \"1234567890\"\n}"
+                      }
+                  }
+              },
+              {
+                  "name": "Get User Details",
+                  "request": {
+                      "method": "GET",
+                      "url": "{{base_url}}/api/users/1/",
+                      "auth": {
+                          "type": "bearer",
+                          "bearer": "{{access_token}}"
+                      }
+                  }
+              }
+          ]
+      },
+      {
+          "name": "Tires",
+          "item": [
+              {
+                  "name": "List Tires",
+                  "request": {
+                      "method": "GET",
+                      "url": "{{base_url}}/api/tires/",
+                      "auth": {
+                          "type": "bearer",
+                          "bearer": "{{access_token}}"
+                      }
+                  }
+              },
+              {
+                  "name": "Create Tire",
+                  "request": {
+                      "method": "POST",
+                      "url": "{{base_url}}/api/tires/",
+                      "auth": {
+                          "type": "bearer",
+                          "bearer": "{{access_token}}"
+                      },
+                      "header": [
+                          {
+                              "key": "Content-Type",
+                              "value": "application/json"
+                          }
+                      ],
+                      "body": {
+                          "mode": "raw",
+                          "raw": "{\n    \"serial_number\": \"TIRE003\",\n    \"model\": \"Model Z\",\n    \"size\": \"315/80R22.5\",\n    \"manufacturer\": \"Manufacturer C\",\n    \"purchase_date\": \"2024-01-26\",\n    \"status\": \"ORDERED\",\n    \"owner\": 2,\n    \"working_hours\": 0,\n    \"tread_depth\": 20.0\n}"
+                      }
+                  }
+              },
+              {
+                  "name": "Get Tire Details",
+                  "request": {
+                      "method": "GET",
+                      "url": "{{base_url}}/api/tires/1/",
+                      "auth": {
+                          "type": "bearer",
+                          "bearer": "{{access_token}}"
+                      }
+                  }
+              },
+              {
+                  "name": "Activate Warranty",
+                  "request": {
+                      "method": "POST",
+                      "url": "{{base_url}}/api/tires/1/activate_warranty/",
+                      "auth": {
+                          "type": "bearer",
+                          "bearer": "{{access_token}}"
+                      }
+                  }
+              }
+          ]
+      },
+      {
+          "name": "Repair Requests",
+          "item": [
+              {
+                  "name": "List Repair Requests",
+                  "request": {
+                      "method": "GET",
+                      "url": "{{base_url}}/api/repair-requests/",
+                      "auth": {
+                          "type": "bearer",
+                          "bearer": "{{access_token}}"
+                      }
+                  }
+              },
+              {
+                  "name": "Create Repair Request",
+                  "request": {
+                      "method": "POST",
+                      "url": "{{base_url}}/api/repair-requests/",
+                      "auth": {
+                          "type": "bearer",
+                          "bearer": "{{access_token}}"
+                      },
+                      "header": [
+                          {
+                              "key": "Content-Type",
+                              "value": "application/json"
+                          }
+                      ],
+                      "body": {
+                          "mode": "raw",
+                          "raw": "{\n    \"tire\": 1,\n    \"description\": \"Puncture in sidewall\",\n    \"status\": \"PENDING\"\n}"
+                      }
+                  }
+              },
+              {
+                  "name": "Get Repair Request Details",
+                  "request": {
+                      "method": "GET",
+                      "url": "{{base_url}}/api/repair-requests/1/",
+                      "auth": {
+                          "type": "bearer",
+                          "bearer": "{{access_token}}"
+                      }
+                  }
+              }
+          ]
+      },
+      {
+          "name": "Technical Reports",
+          "item": [
+              {
+                  "name": "List Technical Reports",
+                  "request": {
+                      "method": "GET",
+                      "url": "{{base_url}}/api/technical-reports/",
+                      "auth": {
+                          "type": "bearer",
+                          "bearer": "{{access_token}}"
+                      }
+                  }
+              },
+              {
+                  "name": "Create Technical Report",
+                  "request": {
+                      "method": "POST",
+                      "url": "{{base_url}}/api/technical-reports/",
+                      "auth": {
+                          "type": "bearer",
+                          "bearer": "{{access_token}}"
+                      },
+                      "header": [
+                          {
+                              "key": "Content-Type",
+                              "value": "application/json"
+                          }
+                      ],
+                      "body": {
+                          "mode": "raw",
+                          "raw": "{\n    \"tire\": 1,\n    \"inspection_date\": \"2024-01-26T14:00:00Z\",\n    \"tread_depth\": 15.5,\n    \"working_hours\": 1000,\n    \"condition_rating\": 4,\n    \"notes\": \"Good condition, normal wear pattern\",\n    \"requires_immediate_attention\": false\n}"
+                      }
+                  }
+              },
+              {
+                  "name": "Get Technical Report Details",
+                  "request": {
+                      "method": "GET",
+                      "url": "{{base_url}}/api/technical-reports/1/",
+                      "auth": {
+                          "type": "bearer",
+                          "bearer": "{{access_token}}"
+                      }
+                  }
+              }
+          ]
+      }
+  ]
+}

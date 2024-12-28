@@ -1,0 +1,30 @@
+{
+    "name": "Hamrah Tire Local",
+    "values": [
+        {
+            "key": "base_url",
+            "value": "http://localhost:8000",
+            "type": "default"
+        },
+        {
+            "key": "username",
+            "value": "admin_user",
+            "type": "default"
+        },
+        {
+            "key": "password",
+            "value": "password123",
+            "type": "secret"
+        },
+        {
+            "key": "access_token",
+            "value": "",
+            "type": "secret"
+        },
+        {
+            "key": "refresh_token",
+            "value": "",
+            "type": "secret"
+        }
+    ]
+}

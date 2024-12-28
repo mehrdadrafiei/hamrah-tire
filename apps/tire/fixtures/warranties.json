@@ -1,0 +1,26 @@
+[
+    {
+        "model": "tire.warranty",
+        "pk": 1,
+        "fields": {
+            "tire": 1,
+            "start_date": "2024-01-01",
+            "end_date": "2025-01-01",
+            "is_active": true,
+            "activation_date": "2024-01-01",
+            "approved_by": 1
+        }
+    },
+    {
+        "model": "tire.warranty",
+        "pk": 2,
+        "fields": {
+            "tire": 2,
+            "start_date": "2024-01-15",
+            "end_date": "2025-01-15",
+            "is_active": false,
+            "activation_date": null,
+            "approved_by": null
+        }
+    }
+]

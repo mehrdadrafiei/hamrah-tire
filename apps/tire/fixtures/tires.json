@@ -1,0 +1,32 @@
+[
+    {
+        "model": "tire.tire",
+        "pk": 1,
+        "fields": {
+            "serial_number": "TIRE001",
+            "model": "Model X",
+            "size": "295/80R22.5",
+            "manufacturer": "Manufacturer A",
+            "purchase_date": "2024-01-01",
+            "status": "IN_USE",
+            "owner": 2,
+            "working_hours": 1000,
+            "tread_depth": 15.5
+        }
+    },
+    {
+        "model": "tire.tire",
+        "pk": 2,
+        "fields": {
+            "serial_number": "TIRE002",
+            "model": "Model Y",
+            "size": "315/80R22.5",
+            "manufacturer": "Manufacturer B",
+            "purchase_date": "2024-01-15",
+            "status": "IN_REPAIR",
+            "owner": 2,
+            "working_hours": 500,
+            "tread_depth": 18.0
+        }
+    }
+]
