@@ -3,9 +3,11 @@ from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.response import Response
 from django.contrib.auth import get_user_model
 from .serializers import UserSerializer, UserCreateSerializer
+from drf_spectacular.utils import extend_schema
 
 User = get_user_model()
 
+@extend_schema(tags=['Users'])
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     permission_classes = [IsAuthenticated, IsAdminUser]

@@ -252,6 +252,260 @@
                   }
               }
           ]
-      }
+      },
+      {
+        "name": "Tire Filters",
+        "item": [
+            {
+                "name": "Filter by Status",
+                "request": {
+                    "method": "GET",
+                    "url": {
+                        "raw": "{{base_url}}/api/tires/?status=IN_USE",
+                        "host": ["{{base_url}}"],
+                        "path": ["api", "tires"],
+                        "query": [
+                            {
+                                "key": "status",
+                                "value": "IN_USE"
+                            }
+                        ]
+                    },
+                    "auth": {
+                        "type": "bearer",
+                        "bearer": "{{access_token}}"
+                    }
+                }
+            },
+            {
+                "name": "Search Tires",
+                "request": {
+                    "method": "GET",
+                    "url": {
+                        "raw": "{{base_url}}/api/tires/?search=Model",
+                        "host": ["{{base_url}}"],
+                        "path": ["api", "tires"],
+                        "query": [
+                            {
+                                "key": "search",
+                                "value": "Model"
+                            }
+                        ]
+                    },
+                    "auth": {
+                        "type": "bearer",
+                        "bearer": "{{access_token}}"
+                    }
+                }
+            },
+            {
+                "name": "Filter by Working Hours Range",
+                "request": {
+                    "method": "GET",
+                    "url": {
+                        "raw": "{{base_url}}/api/tires/?min_working_hours=1000&max_working_hours=5000",
+                        "host": ["{{base_url}}"],
+                        "path": ["api", "tires"],
+                        "query": [
+                            {
+                                "key": "min_working_hours",
+                                "value": "1000"
+                            },
+                            {
+                                "key": "max_working_hours",
+                                "value": "5000"
+                            }
+                        ]
+                    },
+                    "auth": {
+                        "type": "bearer",
+                        "bearer": "{{access_token}}"
+                    }
+                }
+            },
+            {
+                "name": "Combined Filters",
+                "request": {
+                    "method": "GET",
+                    "url": {
+                        "raw": "{{base_url}}/api/tires/?status=IN_USE&min_working_hours=1000",
+                        "host": ["{{base_url}}"],
+                        "path": ["api", "tires"],
+                        "query": [
+                            {
+                                "key": "status",
+                                "value": "IN_USE"
+                            },
+                            {
+                                "key": "min_working_hours",
+                                "value": "1000"
+                            }
+                        ]
+                    },
+                    "auth": {
+                        "type": "bearer",
+                        "bearer": "{{access_token}}"
+                    }
+                }
+            }
+        ]
+    },
+    {
+        "name": "Repair Request Filters",
+        "item": [
+            {
+                "name": "Filter by Status",
+                "request": {
+                    "method": "GET",
+                    "url": {
+                        "raw": "{{base_url}}/api/repair-requests/?status=PENDING",
+                        "host": ["{{base_url}}"],
+                        "path": ["api", "repair-requests"],
+                        "query": [
+                            {
+                                "key": "status",
+                                "value": "PENDING"
+                            }
+                        ]
+                    },
+                    "auth": {
+                        "type": "bearer",
+                        "bearer": "{{access_token}}"
+                    }
+                }
+            },
+            {
+                "name": "Search by Tire Serial",
+                "request": {
+                    "method": "GET",
+                    "url": {
+                        "raw": "{{base_url}}/api/repair-requests/?search=TIRE001",
+                        "query": [
+                            {
+                                "key": "search",
+                                "value": "TIRE001"
+                            }
+                        ]
+                    },
+                    "auth": {
+                        "type": "bearer",
+                        "bearer": "{{access_token}}"
+                    }
+                }
+            },
+            {
+                "name": "Filter by Date Range",
+                "request": {
+                    "method": "GET",
+                    "url": {
+                        "raw": "{{base_url}}/api/repair-requests/?start_date=2024-01-01&end_date=2024-12-31",
+                        "query": [
+                            {
+                                "key": "start_date",
+                                "value": "2024-01-01"
+                            },
+                            {
+                                "key": "end_date",
+                                "value": "2024-12-31"
+                            }
+                        ]
+                    },
+                    "auth": {
+                        "type": "bearer",
+                        "bearer": "{{access_token}}"
+                    }
+                }
+            }
+        ]
+    },
+    {
+        "name": "Technical Report Filters",
+        "item": [
+            {
+                "name": "Filter by Critical Reports",
+                "request": {
+                    "method": "GET",
+                    "url": {
+                        "raw": "{{base_url}}/api/technical-reports/?requires_immediate_attention=true",
+                        "query": [
+                            {
+                                "key": "requires_immediate_attention",
+                                "value": "true"
+                            }
+                        ]
+                    },
+                    "auth": {
+                        "type": "bearer",
+                        "bearer": "{{access_token}}"
+                    }
+                }
+            },
+            {
+                "name": "Filter by Condition Rating",
+                "request": {
+                    "method": "GET",
+                    "url": {
+                        "raw": "{{base_url}}/api/technical-reports/?condition_rating=4",
+                        "query": [
+                            {
+                                "key": "condition_rating",
+                                "value": "4"
+                            }
+                        ]
+                    },
+                    "auth": {
+                        "type": "bearer",
+                        "bearer": "{{access_token}}"
+                    }
+                }
+            },
+            {
+                "name": "Filter by Tread Depth Range",
+                "request": {
+                    "method": "GET",
+                    "url": {
+                        "raw": "{{base_url}}/api/technical-reports/?min_tread_depth=10&max_tread_depth=20",
+                        "query": [
+                            {
+                                "key": "min_tread_depth",
+                                "value": "10"
+                            },
+                            {
+                                "key": "max_tread_depth",
+                                "value": "20"
+                            }
+                        ]
+                    },
+                    "auth": {
+                        "type": "bearer",
+                        "bearer": "{{access_token}}"
+                    }
+                }
+            },
+            {
+                "name": "Filter by Inspection Date",
+                "request": {
+                    "method": "GET",
+                    "url": {
+                        "raw": "{{base_url}}/api/technical-reports/?inspection_date_after=2024-01-01&inspection_date_before=2024-12-31",
+                        "query": [
+                            {
+                                "key": "inspection_date_after",
+                                "value": "2024-01-01"
+                            },
+                            {
+                                "key": "inspection_date_before",
+                                "value": "2024-12-31"
+                            }
+                        ]
+                    },
+                    "auth": {
+                        "type": "bearer",
+                        "bearer": "{{access_token}}"
+                    }
+                }
+            }
+        ]
+    }
   ]
 }
