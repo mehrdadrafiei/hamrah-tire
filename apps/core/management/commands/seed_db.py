@@ -36,18 +36,22 @@ class Command(BaseCommand):
                 except Exception as e:
                     self.stdout.write(self.style.ERROR(f'Failed to load {fixture}: {str(e)}'))
 
-            # Set different passwords for different users
-            user_passwords = {
-                'admin_user': 'admin123',
-                'miner_user': 'miner123',
-                'technical_user': 'technical123'
+            # Set different passwords and verify emails for different users
+            user_data = {
+                'admin_user': {'password': 'admin123', 'email_verified': True},
+                'miner_user': {'password': 'miner123', 'email_verified': True},
+                'technical_user': {'password': 'technical123', 'email_verified': True}
             }
 
-            for username, password in user_passwords.items():
-                user = User.objects.get(username=username)
-                user.set_password(password)
-                user.save()
-                self.stdout.write(self.style.SUCCESS(f'Set password for {username}'))
+            for username, data in user_data.items():
+                try:
+                    user = User.objects.get(username=username)
+                    user.set_password(data['password'])
+                    user.email_verified = data['email_verified']
+                    user.save()
+                    self.stdout.write(self.style.SUCCESS(f'Updated user {username}'))
+                except User.DoesNotExist:
+                    self.stdout.write(self.style.ERROR(f'User {username} not found'))
 
         except Exception as e:
             self.stdout.write(self.style.ERROR(f'Seeding failed: {str(e)}'))

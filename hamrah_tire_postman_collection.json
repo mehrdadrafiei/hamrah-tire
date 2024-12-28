@@ -11,93 +11,198 @@
       }
   ],
   "item": [
-      {
-          "name": "Authentication",
-          "item": [
-              {
-                  "name": "Login",
-                  "request": {
-                      "method": "POST",
-                      "url": "{{base_url}}/api/auth/token/",
-                      "header": [
-                          {
-                              "key": "Content-Type",
-                              "value": "application/json"
-                          }
-                      ],
-                      "body": {
-                          "mode": "raw",
-                          "raw": "{\n    \"username\": \"admin_user\",\n    \"password\": \"password123\"\n}"
-                      }
-                  }
-              },
-              {
-                  "name": "Refresh Token",
-                  "request": {
-                      "method": "POST",
-                      "url": "{{base_url}}/api/auth/token/refresh/",
-                      "header": [
-                          {
-                              "key": "Content-Type",
-                              "value": "application/json"
-                          }
-                      ],
-                      "body": {
-                          "mode": "raw",
-                          "raw": "{\n    \"refresh\": \"{{refresh_token}}\"\n}"
-                      }
-                  }
-              }
-          ]
-      },
-      {
-          "name": "Users",
-          "item": [
-              {
-                  "name": "List Users",
-                  "request": {
-                      "method": "GET",
-                      "url": "{{base_url}}/api/users/",
-                      "auth": {
-                          "type": "bearer",
-                          "bearer": "{{access_token}}"
-                      }
-                  }
-              },
-              {
-                  "name": "Create User",
-                  "request": {
-                      "method": "POST",
-                      "url": "{{base_url}}/api/users/",
-                      "auth": {
-                          "type": "bearer",
-                          "bearer": "{{access_token}}"
-                      },
-                      "header": [
-                          {
-                              "key": "Content-Type",
-                              "value": "application/json"
-                          }
-                      ],
-                      "body": {
-                          "mode": "raw",
-                          "raw": "{\n    \"username\": \"new_user\",\n    \"email\": \"new@example.com\",\n    \"password\": \"userpass123\",\n    \"role\": \"MINER\",\n    \"phone\": \"1234567890\"\n}"
-                      }
-                  }
-              },
-              {
-                  "name": "Get User Details",
-                  "request": {
-                      "method": "GET",
-                      "url": "{{base_url}}/api/users/1/",
-                      "auth": {
-                          "type": "bearer",
-                          "bearer": "{{access_token}}"
-                      }
-                  }
-              }
-          ]
-      },
+    {
+        "name": "Authentication",
+        "item": [
+            {
+                "name": "Login",
+                "request": {
+                    "method": "POST",
+                    "url": "{{base_url}}/api/auth/token/",
+                    "header": [
+                        {
+                            "key": "Content-Type",
+                            "value": "application/json"
+                        }
+                    ],
+                    "body": {
+                        "mode": "raw",
+                        "raw": "{\n    \"username\": \"{{username}}\",\n    \"password\": \"{{password}}\"\n}"
+                    }
+                }
+            },
+            {
+                "name": "Refresh Token",
+                "request": {
+                    "method": "POST",
+                    "url": "{{base_url}}/api/auth/token/refresh/",
+                    "header": [
+                        {
+                            "key": "Content-Type",
+                            "value": "application/json"
+                        }
+                    ],
+                    "body": {
+                        "mode": "raw",
+                        "raw": "{\n    \"refresh\": \"{{refresh_token}}\"\n}"
+                    }
+                }
+            },
+            {
+                "name": "Verify Email",
+                "request": {
+                    "method": "POST",
+                    "url": "{{base_url}}/api/auth/verify-email/",
+                    "header": [
+                        {
+                            "key": "Content-Type",
+                            "value": "application/json"
+                        }
+                    ],
+                    "body": {
+                        "mode": "raw",
+                        "raw": "{\n    \"token\": \"your_verification_token\"\n}"
+                    }
+                }
+            },
+            {
+                "name": "Resend Verification Email",
+                "request": {
+                    "method": "POST",
+                    "url": "{{base_url}}/api/auth/verify-email/resend/",
+                    "header": [
+                        {
+                            "key": "Content-Type",
+                            "value": "application/json"
+                        }
+                    ],
+                    "body": {
+                        "mode": "raw",
+                        "raw": "{\n    \"email\": \"user@example.com\"\n}"
+                    }
+                }
+            },
+            {
+                "name": "Request Password Reset",
+                "request": {
+                    "method": "POST",
+                    "url": "{{base_url}}/api/auth/password-reset/",
+                    "header": [
+                        {
+                            "key": "Content-Type",
+                            "value": "application/json"
+                        }
+                    ],
+                    "body": {
+                        "mode": "raw",
+                        "raw": "{\n    \"email\": \"user@example.com\"\n}"
+                    }
+                }
+            },
+            {
+                "name": "Confirm Password Reset",
+                "request": {
+                    "method": "POST",
+                    "url": "{{base_url}}/api/auth/password-reset/confirm/",
+                    "header": [
+                        {
+                            "key": "Content-Type",
+                            "value": "application/json"
+                        }
+                    ],
+                    "body": {
+                        "mode": "raw",
+                        "raw": "{\n    \"token\": \"reset_token\",\n    \"new_password\": \"newpassword123\"\n}"
+                    }
+                }
+            },
+            {
+                "name": "Change Password",
+                "request": {
+                    "method": "POST",
+                    "url": "{{base_url}}/api/auth/password/change/",
+                    "header": [
+                        {
+                            "key": "Content-Type",
+                            "value": "application/json"
+                        }
+                    ],
+                    "auth": { "type": "inherit" },
+                    "body": {
+                        "mode": "raw",
+                        "raw": "{\n    \"current_password\": \"currentpass123\",\n    \"new_password\": \"newpass123\"\n}"
+                    }
+                }
+            }
+        ]
+    },
+    {
+        "name": "Users",
+        "item": [
+            {
+                "name": "List Users",
+                "request": {
+                    "method": "GET",
+                    "url": "{{base_url}}/api/users/",
+                    "auth": { "type": "inherit" }
+                }
+            },
+            {
+                "name": "Create User",
+                "request": {
+                    "method": "POST",
+                    "url": "{{base_url}}/api/users/",
+                    "auth": { "type": "inherit" },
+                    "header": [
+                        {
+                            "key": "Content-Type",
+                            "value": "application/json"
+                        }
+                    ],
+                    "body": {
+                        "mode": "raw",
+                        "raw": "{\n    \"username\": \"new_user\",\n    \"email\": \"new@example.com\",\n    \"password\": \"userpass123\",\n    \"role\": \"MINER\",\n    \"phone\": \"1234567890\"\n}"
+                    }
+                }
+            },
+            {
+                "name": "Get User Details",
+                "request": {
+                    "method": "GET",
+                    "url": "{{base_url}}/api/users/1/",
+                    "auth": { "type": "inherit" }
+                }
+            },
+            {
+                "name": "Get Current User Profile",
+                "request": {
+                    "method": "GET",
+                    "url": "{{base_url}}/api/users/me/",
+                    "auth": { "type": "inherit" }
+                }
+            },
+            {
+                "name": "Activate User",
+                "request": {
+                    "method": "POST",
+                    "url": "{{base_url}}/api/users/1/activate/",
+                    "auth": { "type": "inherit" }
+                }
+            },
+            {
+                "name": "Deactivate User",
+                "request": {
+                    "method": "POST",
+                    "url": "{{base_url}}/api/users/1/deactivate/",
+                    "auth": { "type": "inherit" }
+                }
+            }
+        ],
+        "auth": {
+            "type": "bearer",
+            "bearer": "{{access_token}}"
+        }
+    },
       {
           "name": "Tires",
           "item": [

@@ -25,6 +25,16 @@
             "key": "refresh_token",
             "value": "",
             "type": "secret"
+        },
+        {
+            "key": "verification_token",
+            "value": "",
+            "type": "secret"
+        },
+        {
+            "key": "reset_token",
+            "value": "",
+            "type": "secret"
         }
     ]
 }
