@@ -1,265 +1,313 @@
-from rest_framework import status, viewsets, views, generics
-from rest_framework.decorators import action, permission_classes
-from rest_framework.response import Response
-from rest_framework.permissions import AllowAny, IsAuthenticated, IsAdminUser
-from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
-from django.contrib.auth import get_user_model
-from django.core.mail import send_mail
-from django.conf import settings
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth import login, logout
+from django.contrib.auth.decorators import login_required
+from django.contrib import messages
 from django.utils import timezone
-from drf_spectacular.utils import extend_schema, OpenApiParameter
-from .serializers import (
-    UserSerializer,
-    UserCreateSerializer,
-    UserBasicSerializer,
-    EmailVerificationSerializer,
-    PasswordResetRequestSerializer,
-    PasswordResetConfirmSerializer,
-    PasswordChangeSerializer,
-    UserProfileUpdateSerializer
+from django.db.models import Count, Q
+from django.core.paginator import Paginator
+from django.contrib.auth.decorators import user_passes_test
+from apps.tire.models import Tire, RepairRequest, TechnicalReport
+from .models import User
+from .forms import (
+    UserLoginForm,
+    UserProfileForm,
+    CustomPasswordChangeForm,
+    RepairRequestForm,
+    TechnicalReportForm
 )
-from .permissions import IsAdminOrSelf
+from django.shortcuts import render, redirect
+from django.contrib import messages
+from django.core.exceptions import ValidationError
+from .forms import PasswordResetRequestForm, PasswordResetConfirmForm
 
-User = get_user_model()
-
-@extend_schema(tags=['Authentication'])
-class CustomTokenObtainPairView(TokenObtainPairView):
-    """
-    Takes a set of user credentials and returns an access and refresh JSON web
-    token pair to prove the authentication of those credentials.
-    """
-    def post(self, request, *args, **kwargs):
-        response = super().post(request, *args, **kwargs)
+def login_view(request):
+    """Handle user login with template."""
+    if request.user.is_authenticated:
+        return redirect('dashboard')
         
-        if response.status_code == 200:
-            username = request.data.get('username')
-            user = User.objects.get(username=username)
-            
-            # Check if account is locked
-            if user.account_locked_until and user.account_locked_until > timezone.now():
-                return Response(
-                    {'error': 'Account is temporarily locked. Please try again later.'},
-                    status=status.HTTP_403_FORBIDDEN
-                )
-            
-            # Check if email is verified
-            if not user.email_verified:
-                return Response(
-                    {'error': 'Email not verified. Please verify your email before logging in.'},
-                    status=status.HTTP_403_FORBIDDEN
-                )
-            
-            # Reset failed login attempts on successful login
-            user.reset_failed_login_attempts()
-            
-            # Record IP address
-            user.last_login_ip = request.META.get('REMOTE_ADDR')
-            user.save()
+    if request.method == 'POST':
+        form = UserLoginForm(request.POST)
+        if form.is_valid():
+            user = form.get_user()
+            login(request, user)
+            messages.success(request, f'Welcome back, {user.username}!')
+            return redirect('dashboard')
         else:
-            # Record failed login attempt
-            try:
-                user = User.objects.get(username=request.data.get('username'))
-                user.record_failed_login()
-            except User.DoesNotExist:
-                pass
-            
-        return response
-
-@extend_schema(tags=['Authentication'])
-class CustomTokenRefreshView(TokenRefreshView):
-    """
-    Takes a refresh type JSON web token and returns an access type JSON web
-    token if the refresh token is valid.
-    """
-    pass
-
-@extend_schema(tags=['Users'])
-class UserViewSet(viewsets.ModelViewSet):
-    """
-    API endpoint for managing users.
-    Admins can manage all users, while regular users can only view and update their own profiles.
-    """
-    queryset = User.objects.all()
-    permission_classes = [IsAuthenticated, IsAdminOrSelf]
+            messages.error(request, 'Invalid login credentials.')
+    else:
+        form = UserLoginForm()
     
-    def get_serializer_class(self):
-        if self.action == 'create':
-            return UserCreateSerializer
-        if self.action in ['update', 'partial_update'] and not self.request.user.is_staff:
-            return UserProfileUpdateSerializer
-        return UserSerializer
+    return render(request, 'accounts/login.html', {'form': form})
 
-    def get_queryset(self):
-        if self.request.user.role == 'ADMIN':
-            return User.objects.all()
-        return User.objects.filter(id=self.request.user.id)
+@login_required
+def logout_view(request):
+    """Handle user logout."""
+    logout(request)
+    messages.success(request, 'You have been successfully logged out.')
+    return redirect('login')
 
-    @action(detail=False, methods=['get'])
-    def me(self, request):
-        """Get the current user's profile."""
-        serializer = self.get_serializer(request.user)
-        return Response(serializer.data)
+@login_required
+def dashboard_view(request):
+    """Main dashboard view that redirects to role-specific dashboards."""
+    user = request.user
+    context = {'user': user}
+    
+    if user.role == 'ADMIN':
+        return admin_dashboard(request, context)
+    elif user.role == 'MINER':
+        return miner_dashboard(request, context)
+    elif user.role == 'TECHNICAL':
+        return technical_dashboard(request, context)
+    
+    messages.error(request, 'Invalid user role.')
+    return redirect('logout')
 
-    @action(detail=True, methods=['post'])
-    def activate(self, request, pk=None):
-        """Activate a user account (admin only)."""
-        if not request.user.role == 'ADMIN':
-            return Response(status=status.HTTP_403_FORBIDDEN)
+def admin_dashboard(request, context):
+    """Admin-specific dashboard view."""
+    context.update({
+        'total_users': User.objects.count(),
+        'active_tires': Tire.objects.filter(status='IN_USE').count(),
+        'pending_repairs': RepairRequest.objects.filter(status='PENDING').count(),
+        'monthly_reports': TechnicalReport.objects.filter(
+            inspection_date__month=timezone.now().month
+        ).count(),
+        'recent_activities': get_recent_activities(),
+        'system_alerts': get_system_alerts(),
+        'user_distribution': User.objects.values('role').annotate(count=Count('id')),
+        'tire_status_distribution': Tire.objects.values('status').annotate(count=Count('id'))
+    })
+    return render(request, 'dashboard/admin_dashboard.html', context)
+
+def miner_dashboard(request, context):
+    """Miner-specific dashboard view."""
+    user_tires = Tire.objects.filter(owner=request.user)
+    
+    context.update({
+        'active_tires': user_tires.filter(status='IN_USE').count(),
+        'pending_repairs': RepairRequest.objects.filter(
+            tire__in=user_tires, 
+            status='PENDING'
+        ).count(),
+        'active_warranties': user_tires.filter(
+            warranty__is_active=True
+        ).count(),
+        'inspection_status': get_inspection_status(user_tires),
+        'tires': user_tires.select_related('warranty'),
+        'repair_requests': RepairRequest.objects.filter(
+            tire__in=user_tires
+        ).order_by('-request_date')[:10]
+    })
+    return render(request, 'dashboard/miner_dashboard.html', context)
+
+def technical_dashboard(request, context):
+    """Technical-specific dashboard view."""
+    context.update({
+        'critical_issues': TechnicalReport.objects.filter(
+            requires_immediate_attention=True,
+            resolved=False
+        ).count(),
+        'pending_repairs': RepairRequest.objects.filter(status='PENDING').count(),
+        'todays_inspections': TechnicalReport.objects.filter(
+            inspection_date__date=timezone.now().date()
+        ).count(),
+        'total_inspections': TechnicalReport.objects.count(),
+        'critical_issues_list': get_critical_issues(),
+        'recent_inspections': TechnicalReport.objects.order_by('-inspection_date')[:10],
+        'available_tires': Tire.objects.filter(status='IN_USE')
+    })
+    return render(request, 'dashboard/technical_dashboard.html', context)
+
+@login_required
+def profile_view(request):
+    """User profile view and update."""
+    if request.method == 'POST':
+        form = UserProfileForm(request.POST, instance=request.user)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Profile updated successfully.')
+            return redirect('profile')
+        else:
+            messages.error(request, 'Error updating profile.')
+    else:
+        form = UserProfileForm(instance=request.user)
+    
+    return render(request, 'accounts/profile.html', {'form': form})
+
+@login_required
+def change_password_view(request):
+    """Change password view."""
+    if request.method == 'POST':
+        form = CustomPasswordChangeForm(user=request.user, data=request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Password changed successfully.')
+            return redirect('dashboard')
+    else:
+        form = CustomPasswordChangeForm(user=request.user)
+    
+    return render(request, 'accounts/change_password.html', {'form': form})
+
+@user_passes_test(lambda u: u.role == 'ADMIN')
+def user_list_view(request):
+    """View for listing all users (admin only)."""
+    users = User.objects.all().order_by('-date_joined')
+    paginator = Paginator(users, 10)
+    page = request.GET.get('page')
+    users = paginator.get_page(page)
+    return render(request, 'accounts/user_list.html', {'users': users})
+
+@login_required
+def tire_list_view(request):
+    """View for listing tires based on user role."""
+    user = request.user
+    if user.role == 'ADMIN':
+        tires = Tire.objects.all()
+    elif user.role == 'MINER':
+        tires = Tire.objects.filter(owner=user)
+    else:  # TECHNICAL
+        tires = Tire.objects.filter(status='IN_USE')
+    
+    paginator = Paginator(tires, 10)
+    page = request.GET.get('page')
+    tires = paginator.get_page(page)
+    return render(request, 'tire/tire_list.html', {'tires': tires})
+
+@login_required
+def tire_detail_view(request, pk):
+    """Detailed view of a tire."""
+    tire = get_object_or_404(Tire, pk=pk)
+    if request.user.role == 'MINER' and tire.owner != request.user:
+        messages.error(request, 'You do not have permission to view this tire.')
+        return redirect('tire_list')
         
-        user = self.get_object()
-        user.is_active = True
-        user.save()
-        return Response({'status': 'user activated'})
+    context = {
+        'tire': tire,
+        'repair_requests': tire.repairrequest_set.all().order_by('-request_date'),
+        'technical_reports': tire.technicalreport_set.all().order_by('-inspection_date'),
+        'warranty': getattr(tire, 'warranty', None)
+    }
+    return render(request, 'tire/tire_detail.html', context)
 
-    @action(detail=True, methods=['post'])
-    def deactivate(self, request, pk=None):
-        """Deactivate a user account (admin only)."""
-        if not request.user.role == 'ADMIN':
-            return Response(status=status.HTTP_403_FORBIDDEN)
-        
-        user = self.get_object()
-        user.is_active = False
-        user.save()
-        return Response({'status': 'user deactivated'})
+# Helper functions
+def get_recent_activities():
+    """Get combined recent activities from different models."""
+    activities = []
+    
+    # Add repair requests
+    repair_requests = RepairRequest.objects.select_related(
+        'tire', 'requested_by'
+    ).order_by('-request_date')[:5]
+    
+    for request in repair_requests:
+        activities.append({
+            'timestamp': request.request_date,
+            'user': request.requested_by.username,
+            'action': 'Repair Request',
+            'details': f'Tire: {request.tire.serial_number}'
+        })
+    
+    # Add technical reports
+    reports = TechnicalReport.objects.select_related(
+        'tire', 'expert'
+    ).order_by('-inspection_date')[:5]
+    
+    for report in reports:
+        activities.append({
+            'timestamp': report.inspection_date,
+            'user': report.expert.username,
+            'action': 'Technical Inspection',
+            'details': f'Tire: {report.tire.serial_number}'
+        })
+    
+    return sorted(activities, key=lambda x: x['timestamp'], reverse=True)
 
-@extend_schema(tags=['Authentication'])
-class EmailVerificationView(views.APIView):
-    """
-    API endpoint for email verification.
-    Users receive a verification token via email after registration.
-    """
-    permission_classes = [AllowAny]
-    serializer_class = EmailVerificationSerializer
+def get_system_alerts():
+    """Get system alerts for admin dashboard."""
+    alerts = []
+    
+    # Check for low tread depth
+    critical_tires = Tire.objects.filter(tread_depth__lt=2.0)
+    if critical_tires.exists():
+        alerts.append({
+            'level': 'danger',
+            'message': f'{critical_tires.count()} tires have critically low tread depth'
+        })
+    
+    # Check for overdue inspections
+    thirty_days_ago = timezone.now() - timezone.timedelta(days=30)
+    overdue_tires = Tire.objects.filter(
+        Q(technicalreport__isnull=True) | 
+        Q(technicalreport__inspection_date__lt=thirty_days_ago)
+    ).distinct()
+    if overdue_tires.exists():
+        alerts.append({
+            'level': 'warning',
+            'message': f'{overdue_tires.count()} tires are due for inspection'
+        })
+    
+    return alerts
 
-    def post(self, request):
-        serializer = self.serializer_class(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        
-        token = serializer.validated_data['token']
-        
-        try:
-            user = User.objects.get(email_verification_token=token)
-            if user.verify_email(token):
-                return Response({'message': 'Email verified successfully'})
-            return Response(
-                {'error': 'Invalid or expired token'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        except User.DoesNotExist:
-            return Response(
-                {'error': 'Invalid token'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+def get_inspection_status(tires):
+    """Calculate inspection status percentage for given tires."""
+    thirty_days_ago = timezone.now() - timezone.timedelta(days=30)
+    recent_inspections = tires.filter(
+        technicalreport__inspection_date__gte=thirty_days_ago
+    ).distinct().count()
+    total = tires.count()
+    
+    if total == 0:
+        return "No tires assigned"
+    
+    percentage = (recent_inspections / total) * 100
+    return f"{percentage:.1f}% up to date"
 
-    @action(detail=False, methods=['post'])
-    def resend(self, request):
-        """Resend email verification token."""
-        email = request.data.get('email')
-        try:
-            user = User.objects.get(email=email, email_verified=False)
-            token = user.generate_verification_token()
-            verification_url = f"{settings.FRONTEND_URL}/verify-email?token={token}"
-            
-            send_mail(
-                'Verify your email',
-                f'Please click this link to verify your email: {verification_url}',
-                settings.DEFAULT_FROM_EMAIL,
-                [user.email],
-                fail_silently=False,
-            )
-            return Response({'message': 'Verification email sent'})
-        except User.DoesNotExist:
-            return Response(
-                {'error': 'No unverified user found with this email'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+def get_critical_issues():
+    """Get list of critical technical issues."""
+    return TechnicalReport.objects.filter(
+        requires_immediate_attention=True,
+        resolved=False
+    ).select_related('tire').order_by('-inspection_date')
 
-@extend_schema(tags=['Authentication'])
-class PasswordResetRequestView(views.APIView):
-    """
-    API endpoint for requesting a password reset.
-    Sends a password reset token to the user's email.
-    """
-    permission_classes = [AllowAny]
-    serializer_class = PasswordResetRequestSerializer
 
-    def post(self, request):
-        serializer = self.serializer_class(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        
-        email = serializer.validated_data['email']
-        
-        try:
-            user = User.objects.get(email=email)
-            token = user.generate_password_reset_token()
-            
-            reset_url = f"{settings.FRONTEND_URL}/reset-password?token={token}"
-            send_mail(
-                'Password Reset Request',
-                f'Click here to reset your password: {reset_url}',
-                settings.DEFAULT_FROM_EMAIL,
-                [email],
-                fail_silently=False,
-            )
-            
-            return Response({'message': 'Password reset email sent'})
-        except User.DoesNotExist:
-            # Don't reveal that email doesn't exist
-            return Response({'message': 'Password reset email sent'})
 
-@extend_schema(tags=['Authentication'])
-class PasswordResetConfirmView(views.APIView):
-    """
-    API endpoint for confirming a password reset.
-    Users must provide the token received via email and their new password.
-    """
-    permission_classes = [AllowAny]
-    serializer_class = PasswordResetConfirmSerializer
 
-    def post(self, request):
-        serializer = self.serializer_class(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        
-        token = serializer.validated_data['token']
-        new_password = serializer.validated_data['new_password']
-        
-        try:
-            user = User.objects.get(password_reset_token=token)
-            
-            if not user.password_reset_sent_at or \
-               (timezone.now() - user.password_reset_sent_at).days >= 1:
-                return Response(
-                    {'error': 'Password reset token has expired'},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-            
-            user.set_password(new_password)
-            user.password_reset_token = ''
-            user.password_reset_sent_at = None
-            user.save()
-            
-            return Response({'message': 'Password reset successful'})
-        except User.DoesNotExist:
-            return Response(
-                {'error': 'Invalid token'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+def password_reset_view(request):
+    """Request password reset view."""
+    if request.method == 'POST':
+        form = PasswordResetRequestForm(request.POST)
+        if form.is_valid():
+            try:
+                form.save()  # This will trigger the email sending
+                return redirect('password_reset_done')
+            except ValidationError as e:
+                form.add_error(None, str(e))
+    else:
+        form = PasswordResetRequestForm()
+    
+    return render(request, 'accounts/password_reset_form.html', {'form': form})
 
-@extend_schema(tags=['Users'])
-class PasswordChangeView(views.APIView):
-    """
-    API endpoint for authenticated users to change their password.
-    Requires the current password for verification.
-    """
-    permission_classes = [IsAuthenticated]
-    serializer_class = PasswordChangeSerializer
+def password_reset_done_view(request):
+    """Display message after password reset request."""
+    return render(request, 'accounts/password_reset_done.html')
 
-    def post(self, request):
-        serializer = self.serializer_class(data=request.data, context={'request': request})
-        serializer.is_valid(raise_exception=True)
-        
-        user = request.user
-        user.set_password(serializer.validated_data['new_password'])
-        user.save()
-        
-        return Response({'message': 'Password changed successfully'})
+def password_reset_confirm_view(request, token):
+    """Confirm password reset view."""
+    if request.method == 'POST':
+        form = PasswordResetConfirmForm(request.POST)
+        if form.is_valid():
+            try:
+                form.save(token)
+                return redirect('password_reset_complete')
+            except ValidationError as e:
+                form.add_error(None, str(e))
+    else:
+        form = PasswordResetConfirmForm()
+    
+    return render(request, 'accounts/password_reset_confirm.html', {
+        'form': form,
+        'token': token
+    })
+
+def password_reset_complete_view(request):
+    """Display message after successful password reset."""
+    return render(request, 'accounts/password_reset_complete.html')

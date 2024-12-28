@@ -1,0 +1,258 @@
+{% extends "base.html" %}
+
+{% block title %}Miner Dashboard - Hamrah Tire{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Title -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3">Miner Dashboard</h1>
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newRepairRequestModal">
+            <i class="fas fa-wrench me-2"></i>New Repair Request
+        </button>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">My Active Tires</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ active_tires }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-tire fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Pending Repairs</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ pending_repairs }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-wrench fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Active Warranties</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ active_warranties }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-shield-alt fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Inspection Status</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ inspection_status }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-clipboard-check fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- My Tires Table -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">My Tires</h6>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover" id="myTiresTable">
+                    <thead>
+                        <tr>
+                            <th>Serial Number</th>
+                            <th>Model</th>
+                            <th>Status</th>
+                            <th>Working Hours</th>
+                            <th>Last Inspection</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for tire in tires %}
+                        <tr>
+                            <td>{{ tire.serial_number }}</td>
+                            <td>{{ tire.model }}</td>
+                            <td>
+                                <span class="badge {% if tire.status == 'IN_USE' %}bg-success{% else %}bg-warning{% endif %}">
+                                    {{ tire.get_status_display }}
+                                </span>
+                            </td>
+                            <td>{{ tire.working_hours }}</td>
+                            <td>{{ tire.last_inspection|default:"Not inspected" }}</td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-primary" onclick="viewTireDetails({{ tire.id }})">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-warning" onclick="requestRepair({{ tire.id }})">
+                                    <i class="fas fa-wrench"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Repair Requests -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Recent Repair Requests</h6>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover" id="repairRequestsTable">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Tire</th>
+                            <th>Description</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for request in repair_requests %}
+                        <tr>
+                            <td>{{ request.request_date }}</td>
+                            <td>{{ request.tire.serial_number }}</td>
+                            <td>{{ request.description }}</td>
+                            <td>
+                                <span class="badge bg-{{ request.status_color }}">
+                                    {{ request.get_status_display }}
+                                </span>
+                            </td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-info" onclick="viewRepairDetails({{ request.id }})">
+                                    <i class="fas fa-info-circle"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- New Repair Request Modal -->
+<div class="modal fade" id="newRepairRequestModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">New Repair Request</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="repairRequestForm">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="tire" class="form-label">Select Tire</label>
+                        <select class="form-select" id="tire" name="tire" required>
+                            <option value="">Choose...</option>
+                            {% for tire in tires %}
+                            <option value="{{ tire.id }}">{{ tire.serial_number }} - {{ tire.model }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Description</label>
+                        <textarea class="form-control" id="description" name="description" rows="3" required></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary">Submit Request</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Initialize DataTables
+    $('#myTiresTable').DataTable({
+        order: [[3, 'desc']], // Sort by working hours by default
+        pageLength: 10
+    });
+
+    $('#repairRequestsTable').DataTable({
+        order: [[0, 'desc']], // Sort by date by default
+        pageLength: 5
+    });
+
+    // Handle repair request form submission
+    $('#repairRequestForm').on('submit', function(e) {
+        e.preventDefault();
+        
+        $.ajax({
+            url: '{% url "api:repair-request-list" %}',
+            method: 'POST',
+            headers: {
+                'Authorization': 'Bearer ' + localStorage.getItem('access_token')
+            },
+            data: {
+                tire: $('#tire').val(),
+                description: $('#description').val(),
+                status: 'PENDING'
+            },
+            success: function(response) {
+                $('#newRepairRequestModal').modal('hide');
+                window.location.reload();
+            },
+            error: function(xhr) {
+                alert('Failed to submit repair request. Please try again.');
+            }
+        });
+    });
+});
+
+function viewTireDetails(tireId) {
+    // Implement tire details view
+}
+
+function viewRepairDetails(requestId) {
+    // Implement repair details view
+}
+
+function requestRepair(tireId) {
+    $('#tire').val(tireId);
+    $('#newRepairRequestModal').modal('show');
+}
+</script>
+{% endblock %}

@@ -34,5 +34,5 @@ SIMPLE_JWT = {
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 EMAIL_HOST = 'localhost'
 EMAIL_PORT = 1025
-DEFAULT_FROM_EMAIL = 'test@example.com'
-FRONTEND_URL = 'http://localhost:3000'  # Update this to match your frontend URL
+DEFAULT_FROM_EMAIL = 'noreply@hamrahtire.com'
+FRONTEND_URL = 'http://localhost:8000'  # Change this based on your setup

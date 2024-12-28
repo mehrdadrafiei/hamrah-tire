@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from .models import Tire, Warranty, RepairRequest, TechnicalReport
-from apps.accounts.serializers import UserBasicSerializer
+from apps.accounts.api.serializers import UserBasicSerializer
 
 class WarrantySerializer(serializers.ModelSerializer):
     approved_by_username = serializers.CharField(source='approved_by.username', read_only=True)

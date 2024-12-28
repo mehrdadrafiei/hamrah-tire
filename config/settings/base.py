@@ -166,8 +166,6 @@ EMAIL_HOST_USER = 'your-email@gmail.com'  # Update with your email
 EMAIL_HOST_PASSWORD = 'your-app-password'  # Update with your email app password
 DEFAULT_FROM_EMAIL = 'your-email@gmail.com'  # Update with your email
 
-# Frontend URL for email verification and password reset links
-FRONTEND_URL = 'http://localhost:3000'  # Update with your frontend URL
 
 # Session settings
 SESSION_ENGINE = 'django.contrib.sessions.backends.db'

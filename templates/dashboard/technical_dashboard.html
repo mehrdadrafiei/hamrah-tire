@@ -1,0 +1,246 @@
+{% extends "base.html" %}
+
+{% block title %}Technical Dashboard - Hamrah Tire{% endblock %}
+
+{% block content %}
+<!-- Previous content remains the same up to the Critical Issues Table -->
+
+    <!-- Critical Issues Table -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3 d-flex justify-content-between align-items-center">
+            <h6 class="m-0 font-weight-bold text-primary">Critical Issues</h6>
+            <button class="btn btn-sm btn-outline-danger" id="refreshCriticalIssues">
+                <i class="fas fa-sync-alt me-1"></i>Refresh
+            </button>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover" id="criticalIssuesTable">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Tire</th>
+                            <th>Issue</th>
+                            <th>Working Hours</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for issue in critical_issues_list %}
+                        <tr>
+                            <td>{{ issue.inspection_date }}</td>
+                            <td>{{ issue.tire.serial_number }}</td>
+                            <td>{{ issue.notes }}</td>
+                            <td>{{ issue.working_hours }}</td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-info" onclick="viewInspectionDetails({{ issue.id }})">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <button class="btn btn-sm btn-danger" onclick="markResolved({{ issue.id }})">
+                                    <i class="fas fa-check"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Inspections -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Recent Inspections</h6>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover" id="inspectionsTable">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Tire</th>
+                            <th>Condition</th>
+                            <th>Tread Depth</th>
+                            <th>Working Hours</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for inspection in recent_inspections %}
+                        <tr>
+                            <td>{{ inspection.inspection_date }}</td>
+                            <td>{{ inspection.tire.serial_number }}</td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="rating-stars me-2">
+                                        {% for i in "12345" %}
+                                            <i class="fas fa-star {% if forloop.counter <= inspection.condition_rating %}text-warning{% else %}text-muted{% endif %}"></i>
+                                        {% endfor %}
+                                    </div>
+                                    {{ inspection.get_condition_display }}
+                                </div>
+                            </td>
+                            <td>{{ inspection.tread_depth }} mm</td>
+                            <td>{{ inspection.working_hours }}</td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-info" onclick="viewInspectionDetails({{ inspection.id }})">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-primary" onclick="editInspection({{ inspection.id }})">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- New Inspection Modal -->
+<div class="modal fade" id="newInspectionModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">New Inspection</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="inspectionForm">
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="tire" class="form-label">Select Tire</label>
+                                <select class="form-select" id="tire" name="tire" required>
+                                    <option value="">Choose...</option>
+                                    {% for tire in available_tires %}
+                                    <option value="{{ tire.id }}">{{ tire.serial_number }} - {{ tire.model }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label for="tread_depth" class="form-label">Tread Depth (mm)</label>
+                                <input type="number" class="form-control" id="tread_depth" name="tread_depth" 
+                                       step="0.1" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="working_hours" class="form-label">Working Hours</label>
+                                <input type="number" class="form-control" id="working_hours" name="working_hours" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="condition_rating" class="form-label">Condition Rating</label>
+                                <select class="form-select" id="condition_rating" name="condition_rating" required>
+                                    <option value="">Choose...</option>
+                                    <option value="1">1 - Poor</option>
+                                    <option value="2">2 - Fair</option>
+                                    <option value="3">3 - Good</option>
+                                    <option value="4">4 - Very Good</option>
+                                    <option value="5">5 - Excellent</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label for="notes" class="form-label">Notes</label>
+                                <textarea class="form-control" id="notes" name="notes" rows="4" required></textarea>
+                            </div>
+                            <div class="mb-3 form-check">
+                                <input type="checkbox" class="form-check-input" id="requires_attention" 
+                                       name="requires_immediate_attention">
+                                <label class="form-check-label" for="requires_attention">
+                                    Requires Immediate Attention
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary">Submit Inspection</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Initialize DataTables
+    $('#criticalIssuesTable').DataTable({
+        order: [[0, 'desc']],
+        pageLength: 5
+    });
+
+    $('#inspectionsTable').DataTable({
+        order: [[0, 'desc']],
+        pageLength: 10
+    });
+
+    // Handle inspection form submission
+    $('#inspectionForm').on('submit', function(e) {
+        e.preventDefault();
+        
+        $.ajax({
+            url: '{% url "api:technical-report-list" %}',
+            method: 'POST',
+            headers: {
+                'Authorization': 'Bearer ' + localStorage.getItem('access_token')
+            },
+            data: {
+                tire: $('#tire').val(),
+                tread_depth: $('#tread_depth').val(),
+                working_hours: $('#working_hours').val(),
+                condition_rating: $('#condition_rating').val(),
+                notes: $('#notes').val(),
+                requires_immediate_attention: $('#requires_attention').is(':checked'),
+                inspection_date: new Date().toISOString()
+            },
+            success: function(response) {
+                $('#newInspectionModal').modal('hide');
+                window.location.reload();
+            },
+            error: function(xhr) {
+                alert('Failed to submit inspection. Please try again.');
+            }
+        });
+    });
+
+    // Refresh critical issues
+    $('#refreshCriticalIssues').click(function() {
+        window.location.reload();
+    });
+});
+
+function viewInspectionDetails(inspectionId) {
+    // Implement inspection details view
+}
+
+function editInspection(inspectionId) {
+    // Implement inspection edit
+}
+
+function markResolved(issueId) {
+    if (confirm('Are you sure you want to mark this issue as resolved?')) {
+        $.ajax({
+            url: `/api/technical-reports/${issueId}/resolve/`,
+            method: 'POST',
+            headers: {
+                'Authorization': 'Bearer ' + localStorage.getItem('access_token')
+            },
+            success: function(response) {
+                window.location.reload();
+            },
+            error: function(xhr) {
+                alert('Failed to resolve issue. Please try again.');
+            }
+        });
+    }
+}
+</script>
+{% endblock %}

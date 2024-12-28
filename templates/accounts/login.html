@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+
+{% block title %}Login - Hamrah Tire{% endblock %}
+
+{% block auth_content %}
+<div class="container">
+    <div class="row justify-content-center align-items-center min-vh-100">
+        <div class="col-md-6 col-lg-4">
+            <div class="card shadow">
+                <div class="card-body">
+                    <h3 class="card-title text-center mb-4">Login to Hamrah Tire</h3>
+                    
+                    <form method="post" id="loginForm">
+                        {% csrf_token %}
+                        
+                        <!-- Username field -->
+                        <div class="mb-3">
+                            <label for="username" class="form-label">Username</label>
+                            <input type="text" class="form-control" id="username" name="username" required>
+                        </div>
+
+                        <!-- Password field -->
+                        <div class="mb-3">
+                            <label for="password" class="form-label">Password</label>
+                            <input type="password" class="form-control" id="password" name="password" required>
+                        </div>
+
+                        <!-- Remember me checkbox -->
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" class="form-check-input" id="rememberMe" name="remember_me">
+                            <label class="form-check-label" for="rememberMe">Remember me</label>
+                        </div>
+
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary">Login</button>
+                        </div>
+                    </form>
+
+                    <hr>
+                    
+                    <div class="text-center">
+                        <a href="{% url 'password_reset' %}" class="text-decoration-none">Forgot password?</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    $('#loginForm').on('submit', function(e) {
+        e.preventDefault();
+        
+        $.ajax({
+            url: '{% url "api:token_obtain_pair" %}',
+            method: 'POST',
+            data: {
+                username: $('#username').val(),
+                password: $('#password').val(),
+            },
+            success: function(response) {
+                // Store tokens
+                localStorage.setItem('access_token', response.access);
+                localStorage.setItem('refresh_token', response.refresh);
+                
+                // Redirect to dashboard
+                window.location.href = '{% url "dashboard" %}';
+            },
+            error: function(xhr) {
+                let error = 'Login failed. Please check your credentials.';
+                if (xhr.responseJSON && xhr.responseJSON.detail) {
+                    error = xhr.responseJSON.detail;
+                }
+                
+                // Show error message
+                $('<div class="alert alert-danger alert-dismissible fade show mt-3" role="alert">' +
+                    error +
+                    '<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>' +
+                    '</div>').insertAfter('#loginForm');
+            }
+        });
+    });
+});
+</script>
+{% endblock %}
