@@ -53,31 +53,6 @@ api_patterns = [
 ]
 
 # Frontend URL patterns
-frontend_patterns = [
-    # Authentication & User Management
-    path('', account_views.dashboard_view, name='dashboard'),
-    path('login/', account_views.login_view, name='login'),
-    path('logout/', account_views.logout_view, name='logout'),
-    path('profile/', account_views.profile_view, name='profile'),
-    path('change-password/', account_views.change_password_view, name='change_password'),
-    path('users/', account_views.user_list_view, name='user_list'),
-    
-    # Password Reset Routes
-    path('password-reset/', account_views.password_reset_view, name='password_reset'),
-    path('password-reset/sent/', account_views.password_reset_done_view, name='password_reset_done'),
-    path('password-reset/<str:token>/', account_views.password_reset_confirm_view, name='password_reset_confirm'),
-    path('password-reset/complete/', account_views.password_reset_complete_view, name='password_reset_complete'),
-    
-    # Tire Management
-    path('tires/', account_views.tire_list_view, name='tire_list'),
-    path('tires/<int:pk>/', account_views.tire_detail_view, name='tire_detail'),
-    
-    # Role-specific Dashboards
-    path('dashboard/admin/', account_views.admin_dashboard, name='admin_dashboard'),
-    path('dashboard/miner/', account_views.miner_dashboard, name='miner_dashboard'),
-    path('dashboard/technical/', account_views.technical_dashboard, name='technical_dashboard'),
-]
-
 urlpatterns = [
     # Admin interface
     path('admin/', admin.site.urls),
@@ -85,8 +60,31 @@ urlpatterns = [
     # API endpoints (with namespace)
     path('api/', include((api_patterns, 'api'), namespace='api')),
     
-    # Frontend routes
-    path('', include(frontend_patterns)),
+    # Frontend/Authentication routes
+    path('', account_views.dashboard_view, name='dashboard'),
+    path('accounts/login/', account_views.login_view, name='login'),
+    path('accounts/logout/', account_views.logout_view, name='logout'),
+    path('accounts/profile/', account_views.profile_view, name='profile'),
+    path('accounts/password/change/', account_views.change_password_view, name='change_password'),
+    path('accounts/users/', account_views.user_list_view, name='user_list'),
+    
+    # Password Reset Routes
+    path('accounts/password-reset/', account_views.password_reset_view, name='password_reset'),
+    path('accounts/password-reset/sent/', account_views.password_reset_done_view, name='password_reset_done'),
+    path('accounts/password-reset/<str:token>/', account_views.password_reset_confirm_view, name='password_reset_confirm'),
+    path('accounts/password-reset/complete/', account_views.password_reset_complete_view, name='password_reset_complete'),
+    
+    # Tire Management
+    path('tires/', account_views.tire_list_view, name='tire_list'),
+    path('tires/<int:pk>/', account_views.tire_detail_view, name='tire_detail'),
+
+    #path('repairs/', account_views.repair_list, name='repair_list'),
+
+    # Role-specific Dashboards
+    path('dashboard/admin/', account_views.admin_dashboard, name='admin_dashboard'),
+    path('dashboard/miner/', account_views.miner_dashboard, name='miner_dashboard'),
+    path('dashboard/technical/', account_views.technical_dashboard, name='technical_dashboard'),
+    path('dashboard/', account_views.dashboard_view, name='dashboard')
 ]
 
 # Serve media files in development

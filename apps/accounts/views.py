@@ -6,6 +6,7 @@ from django.utils import timezone
 from django.db.models import Count, Q
 from django.core.paginator import Paginator
 from django.contrib.auth.decorators import user_passes_test
+from apps.accounts.decorators import role_required
 from apps.tire.models import Tire, RepairRequest, TechnicalReport
 from .models import User
 from .forms import (
@@ -19,25 +20,66 @@ from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.core.exceptions import ValidationError
 from .forms import PasswordResetRequestForm, PasswordResetConfirmForm
+from django.contrib.auth import login, authenticate
+from rest_framework_simplejwt.tokens import RefreshToken
+from django.views.decorators.csrf import ensure_csrf_cookie
 
+@ensure_csrf_cookie
 def login_view(request):
     """Handle user login with template."""
     if request.user.is_authenticated:
-        return redirect('dashboard')
-        
+        return redirect_to_dashboard(request.user)
+    
     if request.method == 'POST':
         form = UserLoginForm(request.POST)
         if form.is_valid():
             user = form.get_user()
             login(request, user)
-            messages.success(request, f'Welcome back, {user.username}!')
-            return redirect('dashboard')
-        else:
-            messages.error(request, 'Invalid login credentials.')
+            
+            # Generate JWT tokens
+            refresh = RefreshToken.for_user(user)
+            
+            response = redirect_to_dashboard(user)
+            
+            # Set both cookies and localStorage
+            response.set_cookie(
+                'access_token',
+                str(refresh.access_token),
+                httponly=True,
+                secure=True,
+                samesite='Lax'
+            )
+            response.set_cookie(
+                'refresh_token',
+                str(refresh),
+                httponly=True,
+                secure=True,
+                samesite='Lax'
+            )
+            
+            # Add JavaScript to set localStorage items
+            response.write('<script>')
+            response.write(f'localStorage.setItem("access_token", "{str(refresh.access_token)}");')
+            response.write(f'localStorage.setItem("user_role", "{user.role}");')
+            response.write('</script>')
+            
+            if not form.cleaned_data.get('remember_me', False):
+                request.session.set_expiry(0)
+            
+            return response
     else:
         form = UserLoginForm()
     
     return render(request, 'accounts/login.html', {'form': form})
+
+def redirect_to_dashboard(user):
+    if user.role == 'ADMIN':
+        return redirect('admin_dashboard')
+    elif user.role == 'MINER':
+        return redirect('miner_dashboard')
+    elif user.role == 'TECHNICAL':
+        return redirect('technical_dashboard')
+    return redirect('dashboard')
 
 @login_required
 def logout_view(request):
@@ -45,26 +87,26 @@ def logout_view(request):
     logout(request)
     messages.success(request, 'You have been successfully logged out.')
     return redirect('login')
-
 @login_required
 def dashboard_view(request):
     """Main dashboard view that redirects to role-specific dashboards."""
     user = request.user
-    context = {'user': user}
     
     if user.role == 'ADMIN':
-        return admin_dashboard(request, context)
+        return admin_dashboard(request)
     elif user.role == 'MINER':
-        return miner_dashboard(request, context)
+        return miner_dashboard(request)
     elif user.role == 'TECHNICAL':
-        return technical_dashboard(request, context)
+        return technical_dashboard(request)
     
     messages.error(request, 'Invalid user role.')
     return redirect('logout')
 
-def admin_dashboard(request, context):
+@login_required
+@role_required(['ADMIN'])
+def admin_dashboard(request):
     """Admin-specific dashboard view."""
-    context.update({
+    context = {
         'total_users': User.objects.count(),
         'active_tires': Tire.objects.filter(status='IN_USE').count(),
         'pending_repairs': RepairRequest.objects.filter(status='PENDING').count(),
@@ -75,14 +117,16 @@ def admin_dashboard(request, context):
         'system_alerts': get_system_alerts(),
         'user_distribution': User.objects.values('role').annotate(count=Count('id')),
         'tire_status_distribution': Tire.objects.values('status').annotate(count=Count('id'))
-    })
+    }
     return render(request, 'dashboard/admin_dashboard.html', context)
 
-def miner_dashboard(request, context):
+@role_required(['MINER'])
+def miner_dashboard(request):
     """Miner-specific dashboard view."""
     user_tires = Tire.objects.filter(owner=request.user)
     
-    context.update({
+    context = {
+        'user': request.user,
         'active_tires': user_tires.filter(status='IN_USE').count(),
         'pending_repairs': RepairRequest.objects.filter(
             tire__in=user_tires, 
@@ -96,12 +140,14 @@ def miner_dashboard(request, context):
         'repair_requests': RepairRequest.objects.filter(
             tire__in=user_tires
         ).order_by('-request_date')[:10]
-    })
+    }
     return render(request, 'dashboard/miner_dashboard.html', context)
 
-def technical_dashboard(request, context):
+@role_required(['TECHNICAL'])
+def technical_dashboard(request):
     """Technical-specific dashboard view."""
-    context.update({
+    context = {
+        'user': request.user,
         'critical_issues': TechnicalReport.objects.filter(
             requires_immediate_attention=True,
             resolved=False
@@ -114,7 +160,7 @@ def technical_dashboard(request, context):
         'critical_issues_list': get_critical_issues(),
         'recent_inspections': TechnicalReport.objects.order_by('-inspection_date')[:10],
         'available_tires': Tire.objects.filter(status='IN_USE')
-    })
+    }
     return render(request, 'dashboard/technical_dashboard.html', context)
 
 @login_required
@@ -267,8 +313,6 @@ def get_critical_issues():
         requires_immediate_attention=True,
         resolved=False
     ).select_related('tire').order_by('-inspection_date')
-
-
 
 
 def password_reset_view(request):

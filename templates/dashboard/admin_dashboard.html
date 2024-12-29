@@ -185,24 +185,102 @@
 {% block extra_js %}
 <script>
 $(document).ready(function() {
-    // Initialize DataTable for recent activity
-    $('#recentActivityTable').DataTable({
-        order: [[0, 'desc']],
-        pageLength: 5,
-        lengthMenu: [[5, 10, 25, 50], [5, 10, 25, 50]]
+    // Check if user is already logged in
+    const token = localStorage.getItem('access_token');
+    if (token) {
+        // Verify token and redirect to appropriate dashboard
+        checkAuthAndRedirect();
+    }
+
+    // Handle login form submission
+    $('#loginForm').on('submit', function(e) {
+        e.preventDefault();
+        
+        const loginButton = $('#loginButton');
+        loginButton.prop('disabled', true);
+        loginButton.find('.spinner-border').removeClass('d-none');
+        loginButton.find('.button-text').text('Logging in...');
+        
+        $.ajax({
+            url: '{% url "api:auth:token_obtain_pair" %}',
+            method: 'POST',
+            data: {
+                username: $('#username').val(),
+                password: $('#password').val(),
+            },
+            success: function(response) {
+                // Store tokens
+                localStorage.setItem('access_token', response.access);
+                localStorage.setItem('refresh_token', response.refresh);
+                
+                // Get user info and redirect
+                getUserInfoAndRedirect();
+            },
+            error: function(xhr) {
+                loginButton.prop('disabled', false);
+                loginButton.find('.spinner-border').addClass('d-none');
+                loginButton.find('.button-text').text('Login');
+
+                let error = 'Login failed. Please check your credentials.';
+                if (xhr.responseJSON && xhr.responseJSON.detail) {
+                    error = xhr.responseJSON.detail;
+                }
+                
+                $('#error-messages').html(`
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        ${error}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                `);
+            }
+        });
     });
 
-    // Handle Add User Form submission
-    $('#addUserForm').on('submit', function(e) {
-        e.preventDefault();
-        // AJAX submission code here
-    });
+    function getUserInfoAndRedirect() {
+        $.ajax({
+            url: '/api/users/me/',
+            method: 'GET',
+            headers: {
+                'Authorization': 'Bearer ' + localStorage.getItem('access_token')
+            },
+            success: function(response) {
+                // Store user role for future use
+                localStorage.setItem('user_role', response.role);
+                
+                // Redirect based on role
+                switch(response.role) {
+                    case 'ADMIN':
+                        window.location.href = '{% url "admin_dashboard" %}';
+                        break;
+                    case 'MINER':
+                        window.location.href = '{% url "miner_dashboard" %}';
+                        break;
+                    case 'TECHNICAL':
+                        window.location.href = '{% url "technical_dashboard" %}';
+                        break;
+                    default:
+                        window.location.href = '{% url "dashboard" %}';
+                }
+            },
+            error: function() {
+                // If user info fetch fails, clear tokens and show error
+                localStorage.clear();
+                $('#error-messages').html(`
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        Failed to get user information. Please try again.
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                `);
+            }
+        });
+    }
 
-    // Handle Add Tire Form submission
-    $('#addTireForm').on('submit', function(e) {
-        e.preventDefault();
-        // AJAX submission code here
-    });
+    function checkAuthAndRedirect() {
+        const token = localStorage.getItem('access_token');
+        if (token) {
+            getUserInfoAndRedirect();
+        }
+    }
 });
 </script>
 {% endblock %}

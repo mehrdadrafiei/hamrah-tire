@@ -10,34 +10,54 @@
                 <div class="card-body">
                     <h3 class="card-title text-center mb-4">Login to Hamrah Tire</h3>
                     
-                    <form method="post" id="loginForm">
+                    <form id="loginForm" method="POST" action="{% url 'login' %}">
                         {% csrf_token %}
                         
-                        <!-- Username field -->
+                        {% if form.errors %}
+                        <div class="alert alert-danger">
+                            Invalid username or password.
+                        </div>
+                        {% endif %}
+
+                        {% if messages %}
+                        <div class="messages">
+                            {% for message in messages %}
+                            <div class="alert alert-{{ message.tags }}">
+                                {{ message }}
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+
                         <div class="mb-3">
                             <label for="username" class="form-label">Username</label>
                             <input type="text" class="form-control" id="username" name="username" required>
                         </div>
 
-                        <!-- Password field -->
                         <div class="mb-3">
                             <label for="password" class="form-label">Password</label>
-                            <input type="password" class="form-control" id="password" name="password" required>
+                            <div class="input-group">
+                                <input type="password" class="form-control" id="password" name="password" required>
+                                <button class="btn btn-outline-secondary" type="button" id="togglePassword">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
                         </div>
 
-                        <!-- Remember me checkbox -->
                         <div class="mb-3 form-check">
-                            <input type="checkbox" class="form-check-input" id="rememberMe" name="remember_me">
+                            <input type="checkbox" class="form-check-input" id="rememberMe" name="remember">
                             <label class="form-check-label" for="rememberMe">Remember me</label>
                         </div>
 
-                        <div class="d-grid">
-                            <button type="submit" class="btn btn-primary">Login</button>
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary" id="loginButton">
+                                <span class="spinner-border spinner-border-sm d-none" role="status"></span>
+                                <span class="button-text">Login</span>
+                            </button>
                         </div>
                     </form>
 
                     <hr>
-                    
                     <div class="text-center">
                         <a href="{% url 'password_reset' %}" class="text-decoration-none">Forgot password?</a>
                     </div>
@@ -46,43 +66,31 @@
         </div>
     </div>
 </div>
-
 {% endblock %}
 
 {% block extra_js %}
 <script>
 $(document).ready(function() {
-    $('#loginForm').on('submit', function(e) {
-        e.preventDefault();
+    // Toggle password visibility
+    $('#togglePassword').on('click', function() {
+        const passwordInput = $('#password');
+        const icon = $(this).find('i');
         
-        $.ajax({
-            url: '{% url "api:token_obtain_pair" %}',
-            method: 'POST',
-            data: {
-                username: $('#username').val(),
-                password: $('#password').val(),
-            },
-            success: function(response) {
-                // Store tokens
-                localStorage.setItem('access_token', response.access);
-                localStorage.setItem('refresh_token', response.refresh);
-                
-                // Redirect to dashboard
-                window.location.href = '{% url "dashboard" %}';
-            },
-            error: function(xhr) {
-                let error = 'Login failed. Please check your credentials.';
-                if (xhr.responseJSON && xhr.responseJSON.detail) {
-                    error = xhr.responseJSON.detail;
-                }
-                
-                // Show error message
-                $('<div class="alert alert-danger alert-dismissible fade show mt-3" role="alert">' +
-                    error +
-                    '<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>' +
-                    '</div>').insertAfter('#loginForm');
-            }
-        });
+        if (passwordInput.attr('type') === 'password') {
+            passwordInput.attr('type', 'text');
+            icon.removeClass('fa-eye').addClass('fa-eye-slash');
+        } else {
+            passwordInput.attr('type', 'password');
+            icon.removeClass('fa-eye-slash').addClass('fa-eye');
+        }
+    });
+
+    // Handle form submission
+    $('#loginForm').on('submit', function(e) {
+        const button = $('#loginButton');
+        button.prop('disabled', true);
+        button.find('.spinner-border').removeClass('d-none');
+        button.find('.button-text').text('Logging in...');
     });
 });
 </script>
