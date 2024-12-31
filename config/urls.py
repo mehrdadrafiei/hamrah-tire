@@ -67,6 +67,9 @@ urlpatterns = [
     path('accounts/profile/', account_views.profile_view, name='profile'),
     path('accounts/password/change/', account_views.change_password_view, name='change_password'),
     path('accounts/users/', account_views.user_list_view, name='user_list'),
+    path('accounts/profile/', account_views.profile_view, name='profile'),
+    path('accounts/notifications/', account_views.notifications_view, name='notifications'),
+    path('accounts/messages/', account_views.messages_view, name='messages'),
     
     # Password Reset Routes
     path('accounts/password-reset/', account_views.password_reset_view, name='password_reset'),

@@ -1,3 +1,4 @@
+from django.http import JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
@@ -181,13 +182,15 @@ def profile_view(request):
 
 @login_required
 def change_password_view(request):
-    """Change password view."""
+    """Change password view for logged-in users."""
     if request.method == 'POST':
         form = CustomPasswordChangeForm(user=request.user, data=request.POST)
         if form.is_valid():
             form.save()
             messages.success(request, 'Password changed successfully.')
-            return redirect('dashboard')
+            return redirect('profile')
+        else:
+            messages.error(request, 'Please correct the errors below.')
     else:
         form = CustomPasswordChangeForm(user=request.user)
     
@@ -355,3 +358,18 @@ def password_reset_confirm_view(request, token):
 def password_reset_complete_view(request):
     """Display message after successful password reset."""
     return render(request, 'accounts/password_reset_complete.html')
+
+
+@login_required
+def notifications_view(request):
+    if request.method == 'POST':
+        # Handle notification preferences update
+        return JsonResponse({'status': 'success'})
+    return JsonResponse({'notifications': []})
+
+@login_required
+def messages_view(request):
+    if request.method == 'POST':
+        # Handle new message
+        return JsonResponse({'status': 'success'})
+    return JsonResponse({'messages': []})

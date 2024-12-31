@@ -13,6 +13,8 @@ class User(AbstractUser):
     role = models.CharField(max_length=20, choices=ROLES)
     phone = models.CharField(max_length=15, blank=True)
     is_active = models.BooleanField(default=True)
+    first_name = models.CharField(max_length=100, blank=True)
+    last_name = models.CharField(max_length=100, blank=True)
     
     # Email verification fields
     email_verified = models.BooleanField(default=False)
@@ -29,6 +31,13 @@ class User(AbstractUser):
     last_failed_login = models.DateTimeField(null=True, blank=True)
     account_locked_until = models.DateTimeField(null=True, blank=True)
     
+    instagram = models.URLField(max_length=200, blank=True)
+    twitter = models.URLField(max_length=200, blank=True) 
+    telegram = models.URLField(max_length=200, blank=True)
+    youtube = models.URLField(max_length=200, blank=True)
+    bale = models.URLField(max_length=200, blank=True)
+    eitaa = models.URLField(max_length=200, blank=True)
+
     class Meta:
         db_table = 'users'
     

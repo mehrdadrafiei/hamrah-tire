@@ -40,10 +40,19 @@ class UserLoginForm(forms.Form):
 class UserProfileForm(forms.ModelForm):
     class Meta:
         model = User
-        fields = ['email', 'phone']
+        fields = ['first_name', 'last_name', 'email', 'phone', 
+                 'instagram', 'twitter', 'telegram', 'youtube', 'bale', 'eitaa']
         widgets = {
+            'first_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'last_name': forms.TextInput(attrs={'class': 'form-control'}),
             'email': forms.EmailInput(attrs={'class': 'form-control'}),
             'phone': forms.TextInput(attrs={'class': 'form-control'}),
+            'instagram': forms.URLInput(attrs={'class': 'form-control', 'placeholder': 'Instagram profile URL'}),
+            'twitter': forms.URLInput(attrs={'class': 'form-control', 'placeholder': 'X/Twitter profile URL'}),
+            'telegram': forms.URLInput(attrs={'class': 'form-control', 'placeholder': 'Telegram profile URL'}),
+            'youtube': forms.URLInput(attrs={'class': 'form-control', 'placeholder': 'YouTube channel URL'}),
+            'bale': forms.URLInput(attrs={'class': 'form-control', 'placeholder': 'Bale profile URL'}),
+            'eitaa': forms.URLInput(attrs={'class': 'form-control', 'placeholder': 'Eitaa profile URL'}),
         }
 
     def clean_email(self):
@@ -55,6 +64,7 @@ class UserProfileForm(forms.ModelForm):
 class CustomPasswordChangeForm(PasswordChangeForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        # Add Bootstrap classes to all fields
         for field in self.fields:
             self.fields[field].widget.attrs['class'] = 'form-control'
 

@@ -1,0 +1,245 @@
+{% extends "base.html" %}
+
+{% block title %}Profile - Hamrah Tire{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <!-- Profile Navigation -->
+        <div class="col-md-3">
+            <div class="card">
+                <div class="list-group list-group-flush">
+                    <a href="#profile" class="list-group-item list-group-item-action active" data-bs-toggle="list">
+                        <i class="fas fa-user me-2"></i>Profile
+                    </a>
+                    <a href="#security" class="list-group-item list-group-item-action" data-bs-toggle="list">
+                        <i class="fas fa-shield-alt me-2"></i>Security
+                    </a>
+                    <a href="#notifications" class="list-group-item list-group-item-action" data-bs-toggle="list">
+                        <i class="fas fa-bell me-2"></i>Notifications
+                    </a>
+                    <a href="#messages" class="list-group-item list-group-item-action" data-bs-toggle="list">
+                        <i class="fas fa-envelope me-2"></i>Messages
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Content Area -->
+        <div class="col-md-9">
+            <div class="tab-content">
+                <!-- Profile Section -->
+                <div class="tab-pane fade show active" id="profile">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Profile Information</h5>
+                        </div>
+                        <div class="card-body">
+                            <form id="profileForm" method="post">
+                                {% csrf_token %}
+                                <!-- Basic Information -->
+                                <h6 class="mb-3">Basic Information</h6>
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">Username</label>
+                                        <input type="text" class="form-control" value="{{ user.username }}" disabled>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">Role</label>
+                                        <input type="text" class="form-control" value="{{ user.get_role_display }}" disabled>
+                                    </div>
+                                </div>
+                                
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">First Name</label>
+                                        <input type="text" class="form-control" name="first_name" value="{{ user.first_name }}">
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">Last Name</label>
+                                        <input type="text" class="form-control" name="last_name" value="{{ user.last_name }}">
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">Email</label>
+                                        <input type="email" class="form-control" name="email" value="{{ user.email }}">
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">Phone</label>
+                                        <input type="tel" class="form-control" name="phone" value="{{ user.phone }}">
+                                    </div>
+                                </div>
+
+                                <!-- Social Media Section -->
+                                <h6 class="mb-3 mt-4">Social Media</h6>
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label"><i class="fab fa-instagram me-2"></i>Instagram</label>
+                                        <input type="url" class="form-control" name="instagram" value="{{ user.instagram }}" placeholder="Instagram profile URL">
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label"><i class="fab fa-twitter me-2"></i>X (Twitter)</label>
+                                        <input type="url" class="form-control" name="twitter" value="{{ user.twitter }}" placeholder="X/Twitter profile URL">
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label"><i class="fab fa-telegram me-2"></i>Telegram</label>
+                                        <input type="url" class="form-control" name="telegram" value="{{ user.telegram }}" placeholder="Telegram profile URL">
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label"><i class="fab fa-youtube me-2"></i>YouTube</label>
+                                        <input type="url" class="form-control" name="youtube" value="{{ user.youtube }}" placeholder="YouTube channel URL">
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">Bale</label>
+                                        <input type="url" class="form-control" name="bale" value="{{ user.bale }}" placeholder="Bale profile URL">
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">Eitaa</label>
+                                        <input type="url" class="form-control" name="eitaa" value="{{ user.eitaa }}" placeholder="Eitaa profile URL">
+                                    </div>
+                                </div>
+
+                                <button type="submit" class="btn btn-primary">Save Changes</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Security Section -->
+                <div class="tab-pane fade" id="security">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Security Settings</h5>
+                        </div>
+                        <div class="card-body">
+                            <form id="passwordForm" method="post" action="{% url 'change_password' %}">
+                                {% csrf_token %}
+                                <div class="mb-3">
+                                    <label class="form-label">Current Password</label>
+                                    <input type="password" class="form-control" name="current_password">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">New Password</label>
+                                    <input type="password" class="form-control" name="new_password">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Confirm New Password</label>
+                                    <input type="password" class="form-control" name="confirm_password">
+                                </div>
+                                <button type="submit" class="btn btn-primary">Change Password</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Notifications Section -->
+                <div class="tab-pane fade" id="notifications">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Notification Preferences</h5>
+                        </div>
+                        <div class="card-body">
+                            <form id="notificationForm">
+                                <div class="form-check mb-3">
+                                    <input type="checkbox" class="form-check-input" id="emailNotifications">
+                                    <label class="form-check-label">Email Notifications</label>
+                                </div>
+                                <div class="form-check mb-3">
+                                    <input type="checkbox" class="form-check-input" id="smsNotifications">
+                                    <label class="form-check-label">SMS Notifications</label>
+                                </div>
+                                <button type="submit" class="btn btn-primary">Save Preferences</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Messages Section -->
+                <div class="tab-pane fade" id="messages">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Message Center</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="list-group">
+                                {% for message in messages %}
+                                <div class="list-group-item">
+                                    <div class="d-flex w-100 justify-content-between">
+                                        <h6 class="mb-1">{{ message.subject }}</h6>
+                                        <small>{{ message.created_at|timesince }} ago</small>
+                                    </div>
+                                    <p class="mb-1">{{ message.content }}</p>
+                                </div>
+                                {% empty %}
+                                <div class="text-center py-3">
+                                    <p class="text-muted">No messages</p>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Profile form submission
+    $('#profileForm').on('submit', function(e) {
+        e.preventDefault();
+        $.ajax({
+            url: '{% url "profile" %}',
+            method: 'POST',
+            data: $(this).serialize(),
+            success: function(response) {
+                showAlert('success', 'Profile updated successfully');
+            },
+            error: function(xhr) {
+                showAlert('danger', 'Failed to update profile');
+            }
+        });
+    });
+
+    // Password form submission
+    $('#passwordForm').on('submit', function(e) {
+        e.preventDefault();
+        $.ajax({
+            url: '{% url "change_password" %}',
+            method: 'POST',
+            data: $(this).serialize(),
+            success: function(response) {
+                showAlert('success', 'Password changed successfully');
+                $('#passwordForm')[0].reset();
+            },
+            error: function(xhr) {
+                showAlert('danger', 'Failed to change password');
+            }
+        });
+    });
+
+    // Show alert message
+    function showAlert(type, message) {
+        const alert = `
+            <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        `;
+        $('.alert').remove();
+        $('.card-body').prepend(alert);
+    }
+});
+</script>
+{% endblock %}
