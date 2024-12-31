@@ -117,6 +117,18 @@ $(document).ready(function() {
     //     return;
     // }
 
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+    AuthUtils.setupAjaxHeaders = function() {
+        $.ajaxSetup({
+            beforeSend: function(xhr, settings) {
+                if (!/^(GET|HEAD|OPTIONS|TRACE)$/i.test(settings.type) && !this.crossDomain) {
+                    xhr.setRequestHeader("X-CSRFToken", csrfToken);
+                }
+            }
+        });
+    };
+
     // Keep this part
     $('#logoutBtn').click(function(e) {
         e.preventDefault();

@@ -1,0 +1,153 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} - Hamrah Tire{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="card">
+        <div class="card-header">
+            <h5 class="card-title mb-0">{{ title }}</h5>
+        </div>
+        <div class="card-body">
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+
+            <form method="post">
+                {% csrf_token %}
+                
+                {% if form.non_field_errors %}
+                    <div class="alert alert-danger">
+                        {{ form.non_field_errors }}
+                    </div>
+                {% endif %}
+
+                <div class="row">
+                    <!-- Title and Serial Number -->
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Title</label>
+                        {{ form.title }}
+                        {% if form.title.errors %}
+                            <div class="text-danger">{{ form.title.errors }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Serial Number</label>
+                        {{ form.serial_number }}
+                        {% if form.serial_number.errors %}
+                            <div class="text-danger">{{ form.serial_number.errors }}</div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Brand and Model -->
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Brand</label>
+                        {{ form.brand }}
+                        {% if form.brand.errors %}
+                            <div class="text-danger">{{ form.brand.errors }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Model</label>
+                        {{ form.model }}
+                        {% if form.model.errors %}
+                            <div class="text-danger">{{ form.model.errors }}</div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Compound and Pattern -->
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Compound</label>
+                        {{ form.compound }}
+                        {% if form.compound.errors %}
+                            <div class="text-danger">{{ form.compound.errors }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Pattern</label>
+                        {{ form.pattern }}
+                        {% if form.pattern.errors %}
+                            <div class="text-danger">{{ form.pattern.errors }}</div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Size and Category -->
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Size</label>
+                        {{ form.size }}
+                        {% if form.size.errors %}
+                            <div class="text-danger">{{ form.size.errors }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Category</label>
+                        {{ form.category }}
+                        {% if form.category.errors %}
+                            <div class="text-danger">{{ form.category.errors }}</div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Working Hours and Status -->
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Working Hours</label>
+                        {{ form.working_hours }}
+                        {% if form.working_hours.errors %}
+                            <div class="text-danger">{{ form.working_hours.errors }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Status</label>
+                        {{ form.status }}
+                        {% if form.status.errors %}
+                            <div class="text-danger">{{ form.status.errors }}</div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Owner -->
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Owner</label>
+                        {{ form.owner }}
+                        {% if form.owner.errors %}
+                            <div class="text-danger">{{ form.owner.errors }}</div>
+                        {% endif %}
+                    </div>
+                    <!-- purchase_date -->
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Purchase Date</label>
+                        {{ form.purchase_date }}
+                        {% if form.purchase_date.errors %}
+                            <div class="text-danger">{{ form.purchase_date.errors }}</div>
+                        {% endif %}
+                    </div>
+                    <!-- tread_depth -->
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Tread Depth</label>
+                        {{ form.tread_depth }}
+                        {% if form.tread_depth.errors %}
+                            <div class="text-danger">{{ form.tread_depth.errors }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="mt-3">
+                    <button type="submit" class="btn btn-primary">{{ submit_text }}</button>
+                    <a href="{% url 'tire_list' %}" class="btn btn-secondary">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Optional: Add any client-side validation or dynamic behavior here
+});
+</script>
+{% endblock %}

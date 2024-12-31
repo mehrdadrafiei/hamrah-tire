@@ -22,6 +22,7 @@ class Command(BaseCommand):
             # Load fixtures
             fixtures = [
                 'users.json',
+                'categories.json',
                 'tires.json',
                 'warranties.json',
                 'repair_requests.json',

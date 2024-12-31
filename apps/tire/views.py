@@ -1,139 +1,157 @@
-# apps/tire/views.py
-from rest_framework import viewsets, status
-from rest_framework.decorators import action
-from rest_framework.response import Response
-from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework.filters import SearchFilter, OrderingFilter
-from drf_spectacular.utils import extend_schema, OpenApiParameter
-from django.db.models import Count, Avg
-from rest_framework.permissions import IsAuthenticated
-from .models import Tire, Warranty, RepairRequest, TechnicalReport
-from .serializers import (
-    TireDetailSerializer, 
-    TireListSerializer,
-    WarrantySerializer,
-    RepairRequestSerializer, 
-    TechnicalReportSerializer
-)
-from .filters import TireFilter
-from .permissions import TirePermission, RepairRequestPermission, TechnicalReportPermission
+from django.utils import timezone
 
+from django.http import JsonResponse
+from apps.tire.models import TechnicalReport, Tire
+from django.contrib.auth.decorators import login_required
+from apps.tire.models import Tire,TireCategory
+from django.core.paginator import Paginator
+from apps.accounts.decorators import role_required
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib import messages
+from django.views.decorators.csrf import ensure_csrf_cookie
 
-@extend_schema(tags=['Tires'])
-class TireViewSet(viewsets.ModelViewSet):
-    filterset_class = TireFilter
-    search_fields = ['serial_number', 'model', 'manufacturer']
-    ordering_fields = ['purchase_date', 'working_hours', 'tread_depth']
-    ordering = ['-purchase_date']
-    permission_classes = [IsAuthenticated, TirePermission]
-    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+from .forms import TireForm
 
-    def get_serializer_class(self):
-        if self.action == 'list':
-            return TireListSerializer
-        return TireDetailSerializer
+@login_required
+def tire_list_view(request):
+    # Get all tires based on user role
+    if request.user.role == 'ADMIN':
+        tires = Tire.objects.all()
+    elif request.user.role == 'MINER':
+        tires = Tire.objects.filter(owner=request.user)
+    else:  # TECHNICAL
+        tires = Tire.objects.filter(status='IN_USE')
 
-    def get_queryset(self):
-        user = self.request.user
-        if user.role == 'ADMIN':
-            return Tire.objects.all()
-        elif user.role == 'MINER':
-            return Tire.objects.filter(owner=user)
-        elif user.role == 'TECHNICAL':
-            return Tire.objects.all()
-        return Tire.objects.none()
+    # Apply filters
+    brand = request.GET.get('brand')
+    if brand:
+        tires = tires.filter(brand__icontains=brand)
 
-    def perform_create(self, serializer):
-        serializer.save(owner=self.request.user)
+    model = request.GET.get('model')
+    if model:
+        tires = tires.filter(model__icontains=model)
 
-    @extend_schema(
-        summary="Activate tire warranty",
-        description="Activate the warranty for a specific tire. Only available for tires with inactive warranties.",
-        responses={
-            200: None,
-            400: None,
-            404: None
-        }
-    )
-    @action(detail=True, methods=['post'])
-    def activate_warranty(self, request, pk=None):
-        tire = self.get_object()
-        warranty = getattr(tire, 'warranty', None)
-        
-        if not warranty:
-            return Response(
-                {'error': 'No warranty found for this tire'},
-                status=status.HTTP_404_NOT_FOUND
+    status = request.GET.get('status')
+    if status:
+        tires = tires.filter(status=status)
+
+    category = request.GET.get('category')
+    if category:
+        tires = tires.filter(category_id=category)
+
+    # Pagination
+    paginator = Paginator(tires, 10)
+    page = request.GET.get('page')
+    tires = paginator.get_page(page)
+
+    context = {
+        'tires': tires,
+        'status_choices': Tire.STATUS_CHOICES,
+        'categories': TireCategory.objects.all()
+    }
+    return render(request, 'tire/tire_list.html', context)
+
+@login_required
+@role_required(['ADMIN'])
+def tire_categories_view(request):
+    if request.method == 'POST':
+        category_id = request.POST.get('category_id')
+        if category_id:  # Edit existing category
+            category = get_object_or_404(TireCategory, id=category_id)
+            category.name = request.POST.get('name')
+            category.description = request.POST.get('description')
+            category.save()
+            messages.success(request, 'Category updated successfully.')
+        else:  # Add new category
+            TireCategory.objects.create(
+                name=request.POST.get('name'),
+                description=request.POST.get('description')
             )
+            messages.success(request, 'Category added successfully.')
+        return redirect('tire_categories')
         
-        if warranty.is_active:
-            return Response(
-                {'error': 'Warranty is already active'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+    categories = TireCategory.objects.all().order_by('name')
+    return render(request, 'tire/categories.html', {'categories': categories})
 
-        warranty.is_active = True
-        warranty.activated_by = request.user
-        warranty.save()
-        return Response({'status': 'warranty activated'})
+@login_required
+@role_required(['ADMIN'])
+def tire_add_view(request):
+    if request.method == 'POST':
+        form = TireForm(request.POST)
+        if form.is_valid():
+            tire = form.save(commit=False)
+            tire.created_by = request.user
+            tire.save()
+            messages.success(request, 'Tire added successfully.')
+            return redirect('tire_list')
+    else:
+        form = TireForm(initial={'purchase_date': timezone.now().date()})  # Set default date
+    
+    return render(request, 'tire/tire_form.html', {
+        'form': form,
+        'title': 'Add New Tire',
+        'submit_text': 'Add Tire'
+    })
 
-    @extend_schema(
-        summary="Get tire statistics",
-        description="Get statistics about tires including counts, averages, and status distribution.",
-        responses={200: None}
-    )
-    @action(detail=False, methods=['get'])
-    def statistics(self, request):
-        queryset = self.get_queryset()
-        stats = {
-            'total_tires': queryset.count(),
-            'status_distribution': dict(
-                queryset.values_list('status')
-                .annotate(count=Count('id'))
-            ),
-            'avg_working_hours': queryset.aggregate(
-                Avg('working_hours')
-            )['working_hours__avg'],
-            'avg_tread_depth': queryset.aggregate(
-                Avg('tread_depth')
-            )['tread_depth__avg']
-        }
-        return Response(stats)
+@login_required
+@role_required(['ADMIN'])
+def tire_edit_view(request, pk):
+    tire = get_object_or_404(Tire, pk=pk)
+    if request.method == 'POST':
+        form = TireForm(request.POST, instance=tire)
+        if form.is_valid():
+            form.save()
+            messages.success(request, f'Tire "{tire.title}" has been updated successfully.')
+            return redirect('tire_list')
+        else:
+            messages.error(request, 'Please correct the errors below.')
+    else:
+        form = TireForm(instance=tire)
+    
+    return render(request, 'tire/tire_form.html', {
+        'form': form,
+        'tire': tire,
+        'title': f'Edit Tire - {tire.title}',
+        'submit_text': 'Save Changes'
+    })
 
+@login_required
+@role_required(['ADMIN'])
+@ensure_csrf_cookie
+def tire_delete_view(request, pk):
+    if request.method == 'POST':
+        try:
+            tire = get_object_or_404(Tire, pk=pk)
+            tire_title = tire.title
+            tire.delete()
+            messages.success(request, f'Tire "{tire_title}" has been deleted successfully.')
+            return JsonResponse({'success': True})
+        except Exception as e:
+            return JsonResponse({
+                'success': False, 
+                'error': 'Unable to delete tire. It may be referenced by other items.'
+            }, status=400)
+    return JsonResponse({'success': False, 'error': 'Invalid request'}, status=405)
 
-@extend_schema(tags=['Repairs'])
-class RepairRequestViewSet(viewsets.ModelViewSet):
-    serializer_class = RepairRequestSerializer
-    permission_classes = [IsAuthenticated, RepairRequestPermission]
-    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
-    search_fields = ['tire__serial_number', 'description']
-    ordering_fields = ['request_date', 'status']
-    ordering = ['-request_date']
+@login_required
+@role_required(['ADMIN'])
+def category_delete_view(request, pk):
+    if request.method == 'POST':
+        category = get_object_or_404(TireCategory, pk=pk)
+        category.delete()
+        messages.success(request, 'Category deleted successfully.')
+        return JsonResponse({'success': True})
+    return JsonResponse({'success': False}, status=405)
 
-    def get_queryset(self):
-        user = self.request.user
-        if user.role == 'ADMIN':
-            return RepairRequest.objects.all()
-        return RepairRequest.objects.filter(requested_by=user)
-
-    def perform_create(self, serializer):
-        serializer.save(requested_by=self.request.user)
-
-
-@extend_schema(tags=['Technical'])
-class TechnicalReportViewSet(viewsets.ModelViewSet):
-    serializer_class = TechnicalReportSerializer
-    permission_classes = [IsAuthenticated, TechnicalReportPermission]
-    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
-    search_fields = ['tire__serial_number', 'notes']
-    ordering_fields = ['inspection_date', 'condition_rating']
-    ordering = ['-inspection_date']
-
-    def get_queryset(self):
-        user = self.request.user
-        if user.role != 'TECHNICAL':
-            return TechnicalReport.objects.none()
-        return TechnicalReport.objects.all()
-
-    def perform_create(self, serializer):
-        serializer.save(expert=self.request.user)
+@login_required
+@role_required(['TECHNICAL', 'ADMIN'])
+def report_list_view(request):
+    """View for listing all technical reports."""
+    reports = TechnicalReport.objects.select_related('tire', 'expert').order_by('-inspection_date')
+    
+    context = {
+        'reports': reports,
+        'tires': Tire.objects.all(),
+        'title': 'Technical Reports'
+    }
+    return render(request, 'tire/report_list.html', context)

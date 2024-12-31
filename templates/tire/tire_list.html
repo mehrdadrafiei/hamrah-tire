@@ -1,0 +1,328 @@
+{% extends "base.html" %}
+{% block title %}Tires - Hamrah Tire{% endblock %}
+
+{% block content %}
+{% csrf_token %}
+
+<div class="container-fluid">
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3">Tire Management</h1>
+        <a href="{% url 'tire_add' %}" class="btn btn-primary">
+            <i class="fas fa-plus me-2"></i>Add New Tire
+        </a>
+    </div>
+
+    <!-- Filters -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form id="filterForm" class="row g-3">
+                {% csrf_token %}
+                <div class="col-md-2">
+                    <label class="form-label">Brand</label>
+                    <input type="text" class="form-control" name="brand">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Model</label>
+                    <input type="text" class="form-control" name="model">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Status</label>
+                    <select class="form-select" name="status">
+                        <option value="">All</option>
+                        {% for status in status_choices %}
+                            <option value="{{ status.0 }}">{{ status.1 }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Category</label>
+                    <select class="form-select" name="category">
+                        <option value="">All</option>
+                        {% for category in categories %}
+                            <option value="{{ category.id }}">{{ category.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-4 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary me-2">
+                        <i class="fas fa-filter me-2"></i>Apply Filters
+                    </button>
+                    <button type="button" class="btn btn-secondary" id="clearFilters">
+                        <i class="fas fa-times me-2"></i>Clear Filters
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Tires Table -->
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover" id="tiresTable">
+                    <thead>
+                        <tr>
+                            <th data-sort="title">Title</th>
+                            <th data-sort="serial_number">Serial Number</th>
+                            <th data-sort="brand">Brand</th>
+                            <th data-sort="model">Model</th>
+                            <th data-sort="compound">Compound</th>
+                            <th data-sort="pattern">Pattern</th>
+                            <th data-sort="size">Size</th>
+                            <th data-sort="category">Category</th>
+                            <th data-sort="working_hours">Working Hours</th>
+                            <th data-sort="status">Status</th>
+                            <th data-sort="owner">Owner</th>
+                            <th>Operations</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for tire in tires %}
+                        <tr>
+                            <td>{{ tire.title }}</td>
+                            <td>{{ tire.serial_number }}</td>
+                            <td>{{ tire.brand }}</td>
+                            <td>{{ tire.model }}</td>
+                            <td>{{ tire.compound }}</td>
+                            <td>{{ tire.pattern }}</td>
+                            <td>{{ tire.size }}</td>
+                            <td>{{ tire.category.name }}</td>
+                            <td>{{ tire.working_hours }}</td>
+                            <td>
+                                <span class="badge bg-{{ tire.status|lower }}">
+                                    {{ tire.get_status_display }}
+                                </span>
+                            </td>
+                            <td>{{ tire.owner.username }}</td>
+                            <td>
+                                <div class="btn-group">
+                                    <a href="{% url 'tire_edit' tire.id %}" class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <button type="button" 
+                                            class="btn btn-sm btn-outline-danger delete-tire" 
+                                            data-tire-id="{{ tire.id }}"
+                                            data-tire-title="{{ tire.title }}"
+                                            data-bs-toggle="modal" 
+                                            data-bs-target="#deleteTireModal">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="12" class="text-center">No tires found</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            {% if tires.has_other_pages %}
+            <nav aria-label="Page navigation" class="mt-4">
+                <ul class="pagination justify-content-center">
+                    {% if tires.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ tires.previous_page_number }}">Previous</a>
+                    </li>
+                    {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link">Previous</span>
+                    </li>
+                    {% endif %}
+
+                    {% for num in tires.paginator.page_range %}
+                        {% if tires.number == num %}
+                        <li class="page-item active">
+                            <span class="page-link">{{ num }}</span>
+                        </li>
+                        {% else %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                        </li>
+                        {% endif %}
+                    {% endfor %}
+
+                    {% if tires.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ tires.next_page_number }}">Next</a>
+                    </li>
+                    {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link">Next</span>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteTireModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Delete Tire</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete the tire "<span id="tireToDelete"></span>"?</p>
+                <p class="text-danger">This action cannot be undone.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" id="confirmDelete">Delete</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Initialize DataTable with AJAX
+    const table = $('#tiresTable').DataTable({
+        processing: true,
+        serverSide: false,
+        ajax: {
+            url: '/api/tires/',
+            type: 'GET',
+            data: function(d) {
+                // Return only the filter parameters, remove pagination
+                return {
+                    brand: $('input[name="brand"]').val() || '',
+                    model: $('input[name="model"]').val() || '',
+                    status: $('select[name="status"]').val() || '',
+                    category: $('select[name="category"]').val() || ''
+                };
+            },
+            beforeSend: function(xhr) {
+                const token = localStorage.getItem('access_token');
+                if (token) {
+                    xhr.setRequestHeader('Authorization', `Bearer ${token}`);
+                }
+            },
+            dataSrc: function(json) {
+                return json.results || json || [];
+            },
+            error: function(xhr, error, thrown) {
+                console.error('AJAX Error:', error);
+                if (xhr.responseJSON) {
+                    console.error('Server Response:', xhr.responseJSON);
+                }
+            }
+        },
+        columns: [
+            { data: 'title', defaultContent: '' },
+            { data: 'serial_number', defaultContent: '' },
+            { data: 'brand', defaultContent: '' },
+            { data: 'model', defaultContent: '' },
+            { data: 'compound', defaultContent: '' },
+            { data: 'pattern', defaultContent: '' },
+            { data: 'size', defaultContent: '' },
+            { 
+                data: 'category',
+                defaultContent: '',
+                render: function(data) {
+                    return data ? data.name : '';
+                }
+            },
+            { data: 'working_hours', defaultContent: '' },
+            { 
+                data: 'status',
+                defaultContent: '',
+                render: function(data) {
+                    return data ? `<span class="badge bg-${data.toLowerCase()}">${data}</span>` : '';
+                }
+            },
+            { data: 'owner_username', defaultContent: '' },
+            { 
+                data: 'id',
+                orderable: false,
+                render: function(data, type, row) {
+                    if (!data) return '';
+                    return `
+                        <div class="btn-group">
+                            <a href="/tires/${data}/edit/" class="btn btn-sm btn-outline-primary">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            <button type="button" 
+                                    class="btn btn-sm btn-outline-danger delete-tire" 
+                                    data-tire-id="${data}"
+                                    data-tire-title="${row.title || ''}"
+                                    data-bs-toggle="modal" 
+                                    data-bs-target="#deleteTireModal">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    `;
+                }
+            }
+        ],
+        pageLength: 10,
+        lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "All"]],
+        order: [[0, 'desc']],
+        language: {
+            emptyTable: "No tires found",
+            zeroRecords: "No matching tires found",
+            info: "Showing _START_ to _END_ of _TOTAL_ tires",
+            infoEmpty: "Showing 0 to 0 of 0 tires",
+            infoFiltered: "(filtered from _MAX_ total tires)"
+        }
+    });
+
+    // Handle filter form submission
+    $('#filterForm').on('submit', function(e) {
+        e.preventDefault();
+        table.ajax.reload();
+    });
+
+    // Clear filters
+    $('#clearFilters').on('click', function() {
+        $('#filterForm')[0].reset();
+        table.ajax.reload();
+    });
+
+    // Reinitialize delete buttons after DataTable updates
+    $('#tiresTable').on('draw.dt', function() {
+        $('.delete-tire').off('click').on('click', function() {
+            const tireId = $(this).data('tire-id');
+            const tireTitle = $(this).data('tire-title');
+            $('#tireToDelete').text(tireTitle);
+            $('#confirmDelete').data('tire-id', tireId);
+        });
+    });
+
+    // Handle delete confirmation
+    $('#confirmDelete').on('click', function() {
+        const tireId = $(this).data('tire-id');
+        if (tireId) {
+            $.ajax({
+                url: `/tires/${tireId}/delete/`,
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': $('[name=csrfmiddlewaretoken]').val()
+                },
+                success: function() {
+                    $('#deleteTireModal').modal('hide');
+                    table.ajax.reload();
+                },
+                error: function(xhr) {
+                    let errorMsg = 'Failed to delete tire';
+                    if (xhr.responseJSON && xhr.responseJSON.error) {
+                        errorMsg = xhr.responseJSON.error;
+                    }
+                    alert(errorMsg);
+                }
+            });
+        }
+    });
+});
+</script>
+{% endblock %}

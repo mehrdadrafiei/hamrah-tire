@@ -12,7 +12,7 @@ from apps.accounts.api.views import (
     PasswordResetConfirmView,
     PasswordChangeView
 )
-from apps.tire.views import (
+from apps.tire.api.views import (
     TireViewSet,
     RepairRequestViewSet,
     TechnicalReportViewSet
@@ -24,6 +24,7 @@ from drf_spectacular.views import (
 )
 from apps.accounts import views as account_views
 from apps.tire import views as tire_views
+from apps.dashboard import views as dashboard_views
 
 # API Routers
 router = DefaultRouter()
@@ -61,7 +62,7 @@ urlpatterns = [
     path('api/', include((api_patterns, 'api'), namespace='api')),
     
     # Frontend/Authentication routes
-    path('', account_views.dashboard_view, name='dashboard'),
+    path('', dashboard_views.dashboard_view, name='dashboard'),
     path('accounts/login/', account_views.login_view, name='login'),
     path('accounts/logout/', account_views.logout_view, name='logout'),
     path('accounts/profile/', account_views.profile_view, name='profile'),
@@ -78,16 +79,21 @@ urlpatterns = [
     path('accounts/password-reset/complete/', account_views.password_reset_complete_view, name='password_reset_complete'),
     
     # Tire Management
-    path('tires/', account_views.tire_list_view, name='tire_list'),
-    path('tires/<int:pk>/', account_views.tire_detail_view, name='tire_detail'),
-
+    path('tires/', tire_views.tire_list_view, name='tire_list'),
+    path('tires/add/', tire_views.tire_add_view, name='tire_add'),
+    path('tires/categories/', tire_views.tire_categories_view, name='tire_categories'),
+    path('tires/<int:pk>/edit/', tire_views.tire_edit_view, name='tire_edit'),
+    path('tires/<int:pk>/delete/', tire_views.tire_delete_view, name='tire_delete'),
+    path('tires/categories/', tire_views.tire_categories_view, name='tire_categories'),
+    path('tires/categories/<int:pk>/delete/', tire_views.category_delete_view, name='delete_category'),
+    path('reports/', tire_views.report_list_view, name='report_list'),
     #path('repairs/', account_views.repair_list, name='repair_list'),
 
     # Role-specific Dashboards
-    path('dashboard/admin/', account_views.admin_dashboard, name='admin_dashboard'),
-    path('dashboard/miner/', account_views.miner_dashboard, name='miner_dashboard'),
-    path('dashboard/technical/', account_views.technical_dashboard, name='technical_dashboard'),
-    path('dashboard/', account_views.dashboard_view, name='dashboard')
+    path('dashboard/admin/', dashboard_views.admin_dashboard, name='admin_dashboard'),
+    path('dashboard/miner/', dashboard_views.miner_dashboard, name='miner_dashboard'),
+    path('dashboard/technical/', dashboard_views.technical_dashboard, name='technical_dashboard'),
+    path('dashboard/', dashboard_views.dashboard_view, name='dashboard')
 ]
 
 # Serve media files in development

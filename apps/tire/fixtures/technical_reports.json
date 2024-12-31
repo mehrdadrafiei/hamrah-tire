@@ -4,13 +4,27 @@
         "pk": 1,
         "fields": {
             "tire": 1,
-            "expert": 3,
-            "inspection_date": "2024-01-25T14:00:00Z",
+            "expert": 4,
+            "inspection_date": "2024-01-15T09:00:00Z",
             "tread_depth": 15.5,
             "working_hours": 1000,
             "condition_rating": 4,
-            "notes": "Good condition, normal wear pattern",
+            "notes": "Normal wear pattern observed",
             "requires_immediate_attention": false
+        }
+    },
+    {
+        "model": "tire.technicalreport",
+        "pk": 2,
+        "fields": {
+            "tire": 2,
+            "expert": 4,
+            "inspection_date": "2024-02-01T11:30:00Z",
+            "tread_depth": 18.0,
+            "working_hours": 500,
+            "condition_rating": 3,
+            "notes": "Minor sidewall damage noticed",
+            "requires_immediate_attention": true
         }
     }
 ]

@@ -2,7 +2,10 @@ from django_filters import rest_framework as filters
 from .models import Tire
 from .models import RepairRequest, TechnicalReport
 
+
 class TireFilter(filters.FilterSet):
+    brand = filters.CharFilter(lookup_expr='icontains')
+    category = filters.NumberFilter(field_name='category__id')
     min_working_hours = filters.NumberFilter(field_name="working_hours", lookup_expr='gte')
     max_working_hours = filters.NumberFilter(field_name="working_hours", lookup_expr='lte')
     min_tread_depth = filters.NumberFilter(field_name="tread_depth", lookup_expr='gte')
@@ -19,6 +22,8 @@ class TireFilter(filters.FilterSet):
             'manufacturer': ['exact', 'icontains'],
             'status': ['exact', 'in'],
             'owner': ['exact'],
+            'brand': ['exact', 'icontains'],
+            'category': ['exact'],
         }
 
 

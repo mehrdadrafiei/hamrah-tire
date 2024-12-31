@@ -20,7 +20,7 @@
             "end_date": "2025-01-15",
             "is_active": false,
             "activation_date": null,
-            "approved_by": null
+            "approved_by": 1
         }
     }
 ]

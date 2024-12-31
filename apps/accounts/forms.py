@@ -154,3 +154,4 @@ class PasswordResetConfirmForm(forms.Form):
             
         except User.DoesNotExist:
             raise forms.ValidationError('Invalid reset token')
+        

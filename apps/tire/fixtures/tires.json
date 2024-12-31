@@ -3,30 +3,400 @@
         "model": "tire.tire",
         "pk": 1,
         "fields": {
+            "title": "Front Loader Tire A1",
             "serial_number": "TIRE001",
-            "model": "Model X",
+            "brand": "Michelin",
+            "model": "XDR3",
+            "compound": "Hard Compound",
+            "pattern": "E4/L4",
             "size": "295/80R22.5",
-            "manufacturer": "Manufacturer A",
+            "manufacturer": "Michelin Group",
             "purchase_date": "2024-01-01",
             "status": "IN_USE",
             "owner": 2,
             "working_hours": 1000,
-            "tread_depth": 15.5
+            "tread_depth": 15.5,
+            "category": 1
         }
     },
     {
         "model": "tire.tire",
         "pk": 2,
         "fields": {
+            "title": "Dump Truck Tire B2",
             "serial_number": "TIRE002",
-            "model": "Model Y",
+            "brand": "Bridgestone",
+            "model": "VRPS",
+            "compound": "Medium Compound",
+            "pattern": "L5",
             "size": "315/80R22.5",
-            "manufacturer": "Manufacturer B",
+            "manufacturer": "Bridgestone Corp",
             "purchase_date": "2024-01-15",
             "status": "IN_REPAIR",
             "owner": 2,
             "working_hours": 500,
-            "tread_depth": 18.0
+            "tread_depth": 18.0,
+            "category": 2
+        }
+    },
+    {
+        "model": "tire.tire",
+        "pk": 3,
+        "fields": {
+            "title": "Excavator Tire C3",
+            "serial_number": "TIRE003",
+            "brand": "Goodyear",
+            "model": "RT-3B",
+            "compound": "Soft Compound",
+            "pattern": "E3",
+            "size": "325/95R24",
+            "manufacturer": "Goodyear Tire Co",
+            "purchase_date": "2024-01-20",
+            "status": "IN_USE",
+            "owner": 3,
+            "working_hours": 750,
+            "tread_depth": 16.5,
+            "category": 1
+        }
+    },
+    {
+        "model": "tire.tire",
+        "pk": 4,
+        "fields": {
+            "title": "Haul Truck Tire D4",
+            "serial_number": "TIRE004",
+            "brand": "Michelin",
+            "model": "XDR2",
+            "compound": "Hard Compound",
+            "pattern": "E4",
+            "size": "27.00R49",
+            "manufacturer": "Michelin Group",
+            "purchase_date": "2024-02-01",
+            "status": "WAREHOUSING",
+            "owner": 2,
+            "working_hours": 0,
+            "tread_depth": 20.0,
+            "category": 3
+        }
+    },
+    {
+        "model": "tire.tire",
+        "pk": 5,
+        "fields": {
+            "title": "Loader Tire E5",
+            "serial_number": "TIRE005",
+            "brand": "Continental",
+            "model": "LD-250",
+            "compound": "Medium Compound",
+            "pattern": "L3",
+            "size": "23.5R25",
+            "manufacturer": "Continental AG",
+            "purchase_date": "2024-02-05",
+            "status": "IN_USE",
+            "owner": 3,
+            "working_hours": 300,
+            "tread_depth": 19.5,
+            "category": 2
+        }
+    },
+    {
+        "model": "tire.tire",
+        "pk": 6,
+        "fields": {
+            "title": "Mining Truck Tire F6",
+            "serial_number": "TIRE006",
+            "brand": "Bridgestone",
+            "model": "VRDP",
+            "compound": "Hard Compound",
+            "pattern": "E4",
+            "size": "27.00R49",
+            "manufacturer": "Bridgestone Corp",
+            "purchase_date": "2024-02-10",
+            "status": "ORDERED",
+            "owner": 2,
+            "working_hours": 0,
+            "tread_depth": 20.0,
+            "category": 3
+        }
+    },
+    {
+        "model": "tire.tire",
+        "pk": 7,
+        "fields": {
+            "title": "Earthmover Tire G7",
+            "serial_number": "TIRE007",
+            "brand": "Michelin",
+            "model": "XKD1",
+            "compound": "Soft Compound",
+            "pattern": "L5",
+            "size": "875/65R29",
+            "manufacturer": "Michelin Group",
+            "purchase_date": "2024-02-15",
+            "status": "IN_USE",
+            "owner": 3,
+            "working_hours": 450,
+            "tread_depth": 17.5,
+            "category": 1
+        }
+    },
+    {
+        "model": "tire.tire",
+        "pk": 8,
+        "fields": {
+            "title": "Heavy Duty Tire H8",
+            "serial_number": "TIRE008",
+            "brand": "Goodyear",
+            "model": "RL-4K",
+            "compound": "Hard Compound",
+            "pattern": "E4/L4",
+            "size": "24.00R35",
+            "manufacturer": "Goodyear Tire Co",
+            "purchase_date": "2024-02-20",
+            "status": "IN_USE",
+            "owner": 2,
+            "working_hours": 600,
+            "tread_depth": 16.0,
+            "category": 2
+        }
+    },
+    {
+        "model": "tire.tire",
+        "pk": 9,
+        "fields": {
+            "title": "Mining Tire I9",
+            "serial_number": "TIRE009",
+            "brand": "Continental",
+            "model": "HD-300",
+            "compound": "Medium Compound",
+            "pattern": "L4",
+            "size": "275/70R22.5",
+            "manufacturer": "Continental AG",
+            "purchase_date": "2024-02-25",
+            "status": "IN_REPAIR",
+            "owner": 3,
+            "working_hours": 800,
+            "tread_depth": 14.5,
+            "category": 3
+        }
+    },
+    {
+        "model": "tire.tire",
+        "pk": 10,
+        "fields": {
+            "title": "Dump Truck Tire J10",
+            "serial_number": "TIRE010",
+            "brand": "Bridgestone",
+            "model": "VLTS",
+            "compound": "Hard Compound",
+            "pattern": "E3/L3",
+            "size": "385/65R22.5",
+            "manufacturer": "Bridgestone Corp",
+            "purchase_date": "2024-03-01",
+            "status": "IN_USE",
+            "owner": 2,
+            "working_hours": 250,
+            "tread_depth": 19.0,
+            "category": 1
+        }
+    },
+    {
+        "model": "tire.tire",
+        "pk": 11,
+        "fields": {
+            "title": "Construction Tire K11",
+            "serial_number": "TIRE011",
+            "brand": "Michelin",
+            "model": "XDR4",
+            "compound": "Soft Compound",
+            "pattern": "L5",
+            "size": "29.5R25",
+            "manufacturer": "Michelin Group",
+            "purchase_date": "2024-03-05",
+            "status": "CUSTOMS_CLEARANCE",
+            "owner": 3,
+            "working_hours": 0,
+            "tread_depth": 20.0,
+            "category": 2
+        }
+    },
+    {
+        "model": "tire.tire",
+        "pk": 12,
+        "fields": {
+            "title": "Heavy Equipment Tire L12",
+            "serial_number": "TIRE012",
+            "brand": "Goodyear",
+            "model": "RT-4B",
+            "compound": "Hard Compound",
+            "pattern": "E4",
+            "size": "26.5R25",
+            "manufacturer": "Goodyear Tire Co",
+            "purchase_date": "2024-03-10",
+            "status": "IN_USE",
+            "owner": 2,
+            "working_hours": 550,
+            "tread_depth": 17.0,
+            "category": 3
+        }
+    },
+    {
+        "model": "tire.tire",
+        "pk": 13,
+        "fields": {
+            "title": "Mining Equipment Tire M13",
+            "serial_number": "TIRE013",
+            "brand": "Continental",
+            "model": "LD-400",
+            "compound": "Medium Compound",
+            "pattern": "L3",
+            "size": "18.00R25",
+            "manufacturer": "Continental AG",
+            "purchase_date": "2024-03-15",
+            "status": "IN_USE",
+            "owner": 3,
+            "working_hours": 400,
+            "tread_depth": 18.5,
+            "category": 1
+        }
+    },
+    {
+        "model": "tire.tire",
+        "pk": 14,
+        "fields": {
+            "title": "Earthmover Tire N14",
+            "serial_number": "TIRE014",
+            "brand": "Bridgestone",
+            "model": "VRLS",
+            "compound": "Hard Compound",
+            "pattern": "E4/L4",
+            "size": "24.00R35",
+            "manufacturer": "Bridgestone Corp",
+            "purchase_date": "2024-03-20",
+            "status": "DELIVERED",
+            "owner": 2,
+            "working_hours": 0,
+            "tread_depth": 20.0,
+            "category": 2
+        }
+    },
+    {
+        "model": "tire.tire",
+        "pk": 15,
+        "fields": {
+            "title": "Heavy Duty Tire O15",
+            "serial_number": "TIRE015",
+            "brand": "Michelin",
+            "model": "XKD2",
+            "compound": "Soft Compound",
+            "pattern": "L5",
+            "size": "21.00R35",
+            "manufacturer": "Michelin Group",
+            "purchase_date": "2024-03-25",
+            "status": "IN_USE",
+            "owner": 3,
+            "working_hours": 350,
+            "tread_depth": 19.0,
+            "category": 3
+        }
+    },
+    {
+        "model": "tire.tire",
+        "pk": 16,
+        "fields": {
+            "title": "Mining Truck Tire P16",
+            "serial_number": "TIRE016",
+            "brand": "Goodyear",
+            "model": "RL-5K",
+            "compound": "Hard Compound",
+            "pattern": "E3",
+            "size": "27.00R49",
+            "manufacturer": "Goodyear Tire Co",
+            "purchase_date": "2024-04-01",
+            "status": "IN_USE",
+            "owner": 2,
+            "working_hours": 700,
+            "tread_depth": 15.5,
+            "category": 1
+        }
+    },
+    {
+        "model": "tire.tire",
+        "pk": 17,
+        "fields": {
+            "title": "Construction Equipment Tire Q17",
+            "serial_number": "TIRE017",
+            "brand": "Continental",
+            "model": "HD-500",
+            "compound": "Medium Compound",
+            "pattern": "L4",
+            "size": "20.5R25",
+            "manufacturer": "Continental AG",
+            "purchase_date": "2024-04-05",
+            "status": "DISPOSED",
+            "owner": 3,
+            "working_hours": 2000,
+            "tread_depth": 5.0,
+            "category": 2
+        }
+    },
+    {
+        "model": "tire.tire",
+        "pk": 18,
+        "fields": {
+            "title": "Loader Tire R18",
+            "serial_number": "TIRE018",
+            "brand": "Bridgestone",
+            "model": "VKTS",
+            "compound": "Hard Compound",
+            "pattern": "E4",
+            "size": "23.5R25",
+            "manufacturer": "Bridgestone Corp",
+            "purchase_date": "2024-04-10",
+            "status": "IN_USE",
+            "owner": 2,
+            "working_hours": 150,
+            "tread_depth": 19.5,
+            "category": 3
+        }
+    },
+    {
+        "model": "tire.tire",
+        "pk": 19,
+        "fields": {
+            "title": "Excavator Tire S19",
+            "serial_number": "TIRE019",
+            "brand": "Michelin",
+            "model": "XDR5",
+            "compound": "Soft Compound",
+            "pattern": "L3",
+            "size": "295/80R22.5",
+            "manufacturer": "Michelin Group",
+            "purchase_date": "2024-04-15",
+            "status": "IN_USE",
+            "owner": 3,
+            "working_hours": 480,
+            "tread_depth": 18.0,
+            "category": 1
+        }
+    },
+    {
+        "model": "tire.tire",
+        "pk": 20,
+        "fields": {
+            "title": "Heavy Equipment Tire T20",
+            "serial_number": "TIRE020",
+            "brand": "Goodyear",
+            "model": "RT-5B",
+            "compound": "Hard Compound",
+            "pattern": "E4/L4",
+            "size": "315/80R22.5",
+            "manufacturer": "Goodyear Tire Co",
+            "purchase_date": "2024-04-20",
+            "status": "IN_USE",
+            "owner": 2,
+            "working_hours": 300,
+            "tread_depth": 19.0,
+            "category": 2
         }
     }
 ]

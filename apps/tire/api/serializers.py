@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Tire, Warranty, RepairRequest, TechnicalReport
+from ..models import Tire, Warranty, RepairRequest, TechnicalReport
 from apps.accounts.api.serializers import UserBasicSerializer
 
 class WarrantySerializer(serializers.ModelSerializer):
@@ -35,15 +35,18 @@ class TireDetailSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class TireListSerializer(serializers.ModelSerializer):
-    warranty_status = serializers.SerializerMethodField()
     owner_username = serializers.CharField(source='owner.username', read_only=True)
+    category = serializers.SerializerMethodField()
     
     class Meta:
         model = Tire
-        fields = ['id', 'serial_number', 'model', 'size', 'status', 'warranty_status', 'owner_username']
+        fields = [
+            'id', 'title', 'serial_number', 'brand', 'model', 
+            'compound', 'pattern', 'size', 'category', 
+            'working_hours', 'status', 'owner_username'
+        ]
 
-    def get_warranty_status(self, obj):
-        warranty = obj.warranty if hasattr(obj, 'warranty') else None
-        if not warranty:
-            return "No Warranty"
-        return "Active" if warranty.is_active else "Inactive"
+    def get_category(self, obj):
+        if obj.category:
+            return {'id': obj.category.id, 'name': obj.category.name}
+        return None

@@ -120,22 +120,10 @@
                             <h5 class="card-title mb-0">Security Settings</h5>
                         </div>
                         <div class="card-body">
-                            <form id="passwordForm" method="post" action="{% url 'change_password' %}">
-                                {% csrf_token %}
-                                <div class="mb-3">
-                                    <label class="form-label">Current Password</label>
-                                    <input type="password" class="form-control" name="current_password">
-                                </div>
-                                <div class="mb-3">
-                                    <label class="form-label">New Password</label>
-                                    <input type="password" class="form-control" name="new_password">
-                                </div>
-                                <div class="mb-3">
-                                    <label class="form-label">Confirm New Password</label>
-                                    <input type="password" class="form-control" name="confirm_password">
-                                </div>
-                                <button type="submit" class="btn btn-primary">Change Password</button>
-                            </form>
+                            <p>To change your password, please click the button below:</p>
+                            <a href="{% url 'change_password' %}" class="btn btn-primary">
+                                Change Password
+                            </a>
                         </div>
                     </div>
                 </div>

@@ -10,7 +10,7 @@ class TirePermission(BasePermission):
         if request.user.role == 'ADMIN':
             return True
             
-        # TECHNICAL can view all but only modify reports
+        # TECHNICAL can only view
         if request.user.role == 'TECHNICAL':
             return request.method in SAFE_METHODS
             

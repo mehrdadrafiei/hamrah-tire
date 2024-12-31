@@ -15,6 +15,9 @@
     <!-- Font Awesome -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     
+    <!-- Favicon -->
+    <link rel="shortcut icon" href="{% static 'images/favicon.ico' %}" type="image/x-icon">
+        
     <!-- Custom CSS -->
     <style>
         .sidebar {
@@ -73,10 +76,27 @@
                     {% endif %}
                     
                     <li class="nav-item">
-                        <a class="nav-link {% if 'tires' in request.path %}active{% endif %}" 
-                           href="{% url 'tire_list' %}">
+                        <a class="nav-link" href="#tiresSubmenu" data-bs-toggle="collapse" aria-expanded="false">
                             <i class="fas fa-tire me-2"></i>Tires
+                            <i class="fas fa-chevron-down float-end"></i>
                         </a>
+                        <ul class="collapse list-unstyled" id="tiresSubmenu">
+                            <li>
+                                <a class="nav-link ms-4" href="{% url 'tire_list' %}">
+                                    <i class="fas fa-list me-2"></i>Show Tires
+                                </a>
+                            </li>
+                            <li>
+                                <a class="nav-link ms-4" href="{% url 'tire_add' %}">
+                                    <i class="fas fa-plus me-2"></i>Add New Tire
+                                </a>
+                            </li>
+                            <li>
+                                <a class="nav-link ms-4" href="{% url 'tire_categories' %}">
+                                    <i class="fas fa-tags me-2"></i>Categories
+                                </a>
+                            </li>
+                        </ul>
                     </li>
                     
                     

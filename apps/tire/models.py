@@ -2,6 +2,18 @@ from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator
 from apps.accounts.models import User
 
+class TireCategory(models.Model):
+    name = models.CharField(max_length=100)
+    description = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'tire_categories'
+        verbose_name_plural = 'Tire Categories'
+
+    def __str__(self):
+        return self.name
+    
 class Tire(models.Model):
     STATUS_CHOICES = (
         ('ORDERED', 'Ordered'),
@@ -13,9 +25,12 @@ class Tire(models.Model):
         ('IN_REPAIR', 'In Repair'),
         ('DISPOSED', 'Disposed'),
     )
-    
+    title = models.CharField(max_length=100, blank=True)
+    pattern = models.CharField(max_length=100, blank=True)
+    compound = models.CharField(max_length=100, blank=True)
     serial_number = models.CharField(max_length=50, unique=True)
     model = models.CharField(max_length=100)
+    brand = models.CharField(max_length=100, blank=True)
     size = models.CharField(max_length=50)
     manufacturer = models.CharField(max_length=100)
     purchase_date = models.DateField()
@@ -23,7 +38,8 @@ class Tire(models.Model):
     owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='owned_tires')
     working_hours = models.IntegerField(default=0)
     tread_depth = models.FloatField(validators=[MinValueValidator(0)])
-    
+    category = models.ForeignKey(TireCategory, on_delete=models.SET_NULL, null=True, blank=True)
+
     class Meta:
         db_table = 'tires'
 
@@ -67,6 +83,7 @@ class TechnicalReport(models.Model):
     condition_rating = models.IntegerField(validators=[MinValueValidator(1), MaxValueValidator(5)])
     notes = models.TextField()
     requires_immediate_attention = models.BooleanField(default=False)
+    resolved = models.BooleanField(default=False)  # Add this field
     
     class Meta:
         db_table = 'technical_reports'
@@ -125,3 +142,5 @@ class Alert(models.Model):
     
     class Meta:
         db_table = 'alerts'
+
+
