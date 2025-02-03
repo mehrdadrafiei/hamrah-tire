@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+
+{% block title %}Technical Reports - Hamrah Tire{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3">Technical Reports</h1>
+        {% if user.role == 'TECHNICAL' %}
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newInspectionModal">
+            <i class="fas fa-plus me-2"></i>New Inspection
+        </button>
+        {% endif %}
+    </div>
+
+    <!-- Reports Table -->
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover" id="reportsTable">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Tire</th>
+                            <th>Expert</th>
+                            <th>Condition</th>
+                            <th>Tread Depth</th>
+                            <th>Working Hours</th>
+                            <th>Critical</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if user.role == 'TECHNICAL' %}
+<!-- New Inspection Modal -->
+<div class="modal fade" id="newInspectionModal" tabindex="-1">
+    <!-- Your existing modal code -->
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    const table = $('#reportsTable').DataTable({
+        processing: true,
+        serverSide: false,
+        ajax: {
+            url: '/api/technical-reports/',
+            type: 'GET',
+            beforeSend: function(xhr) {
+                const token = localStorage.getItem('access_token');
+                if (token) {
+                    xhr.setRequestHeader('Authorization', `Bearer ${token}`);
+                }
+            }
+        },
+        columns: [
+            { 
+                data: 'inspection_date',
+                render: function(data) {
+                    return new Date(data).toLocaleString();
+                }
+            },
+            { data: 'tire.serial_number' },
+            { data: 'expert_username' },
+            { 
+                data: 'condition_rating',
+                render: function(data) {
+                    let stars = '';
+                    for(let i = 1; i <= 5; i++) {
+                        stars += `<i class="fas fa-star ${i <= data ? 'text-warning' : 'text-muted'}"></i>`;
+                    }
+                    return `<div class="d-flex align-items-center">
+                            <div class="rating-stars me-2">${stars}</div>
+                            ${data}/5
+                           </div>`;
+                }
+            },
+            { 
+                data: 'tread_depth',
+                render: function(data) {
+                    return `${data} mm`;
+                }
+            },
+            { data: 'working_hours' },
+            { 
+                data: 'requires_immediate_attention',
+                render: function(data) {
+                    return data ? 
+                        '<span class="badge bg-danger">Yes</span>' : 
+                        '<span class="badge bg-success">No</span>';
+                }
+            },
+            { 
+                data: 'resolved',
+                render: function(data) {
+                    return data ? 
+                        '<span class="badge bg-success">Resolved</span>' : 
+                        '<span class="badge bg-warning">Pending</span>';
+                }
+            },
+            { 
+                data: 'id',
+                render: function(data, type, row) {
+                    let buttons = `
+                        <button class="btn btn-sm btn-outline-info" onclick="viewReportDetails(${data})">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    `;
+                    
+                    if ('{{ user.role }}' === 'TECHNICAL' && !row.resolved) {
+                        buttons += `
+                            <button class="btn btn-sm btn-outline-primary" onclick="editReport(${data})">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            ${row.requires_immediate_attention ? 
+                                `<button class="btn btn-sm btn-success" onclick="markResolved(${data})">
+                                    <i class="fas fa-check"></i>
+                                </button>` : ''}
+                        `;
+                    }
+                    return buttons;
+                }
+            }
+        ],
+        order: [[0, 'desc']],
+        pageLength: 10
+    });
+});
+
+// Add your other JavaScript functions here
+</script>
+{% endblock %}

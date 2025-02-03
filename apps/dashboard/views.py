@@ -67,9 +67,11 @@ def miner_dashboard(request):
     }
     return render(request, 'dashboard/miner_dashboard.html', context)
 
+@login_required
 @role_required(['TECHNICAL'])
 def technical_dashboard(request):
     """Technical-specific dashboard view."""
+    today = timezone.now().date()
     context = {
         'user': request.user,
         'critical_issues': TechnicalReport.objects.filter(
@@ -78,13 +80,13 @@ def technical_dashboard(request):
         ).count(),
         'pending_repairs': RepairRequest.objects.filter(status='PENDING').count(),
         'todays_inspections': TechnicalReport.objects.filter(
-            inspection_date__date=timezone.now().date()
+            inspection_date__date=today
         ).count(),
         'total_inspections': TechnicalReport.objects.count(),
         'critical_issues_list': TechnicalReport.objects.filter(
             requires_immediate_attention=True,
             resolved=False
-        ).select_related('tire').order_by('-inspection_date'),
+        ).select_related('tire').order_by('-inspection_date')[:5],
         'recent_inspections': TechnicalReport.objects.select_related('tire').order_by('-inspection_date')[:10],
         'available_tires': Tire.objects.filter(status='IN_USE')
     }

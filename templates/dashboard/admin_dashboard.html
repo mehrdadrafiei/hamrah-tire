@@ -187,7 +187,10 @@
 $(document).ready(function() {
     // Check if user is already logged in
     const token = localStorage.getItem('access_token');
-    if (token) {
+    const currentPath = window.location.pathname;
+
+    // Only redirect if we're not already on a dashboard page
+    if (token && !currentPath.includes('dashboard')) {
         // Verify token and redirect to appropriate dashboard
         checkAuthAndRedirect();
     }
@@ -244,26 +247,10 @@ $(document).ready(function() {
                 'Authorization': 'Bearer ' + localStorage.getItem('access_token')
             },
             success: function(response) {
-                // Store user role for future use
                 localStorage.setItem('user_role', response.role);
-                
-                // Redirect based on role
-                switch(response.role) {
-                    case 'ADMIN':
-                        window.location.href = '{% url "admin_dashboard" %}';
-                        break;
-                    case 'MINER':
-                        window.location.href = '{% url "miner_dashboard" %}';
-                        break;
-                    case 'TECHNICAL':
-                        window.location.href = '{% url "technical_dashboard" %}';
-                        break;
-                    default:
-                        window.location.href = '{% url "dashboard" %}';
-                }
+                window.location.href = getDashboardUrl(response.role);
             },
             error: function() {
-                // If user info fetch fails, clear tokens and show error
                 localStorage.clear();
                 $('#error-messages').html(`
                     <div class="alert alert-danger alert-dismissible fade show" role="alert">
@@ -275,11 +262,28 @@ $(document).ready(function() {
         });
     }
 
+    function getDashboardUrl(role) {
+        switch(role) {
+            case 'ADMIN': return '{% url "admin_dashboard" %}';
+            case 'MINER': return '{% url "miner_dashboard" %}';
+            case 'TECHNICAL': return '{% url "technical_dashboard" %}';
+            default: return '{% url "dashboard" %}';
+        }
+    }
+
     function checkAuthAndRedirect() {
         const token = localStorage.getItem('access_token');
         if (token) {
             getUserInfoAndRedirect();
         }
+    }
+
+    // Initialize DataTables if they exist
+    if ($.fn.DataTable) {
+        $('#recentActivityTable').DataTable({
+            order: [[0, 'desc']],
+            pageLength: 5
+        });
     }
 });
 </script>

@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+
 {% block title %}Tires - Hamrah Tire{% endblock %}
 
 {% block content %}
@@ -8,9 +9,11 @@
     <!-- Page Header -->
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1 class="h3">Tire Management</h1>
+        {% if user.role == 'ADMIN' %}
         <a href="{% url 'tire_add' %}" class="btn btn-primary">
             <i class="fas fa-plus me-2"></i>Add New Tire
         </a>
+        {% endif %}
     </div>
 
     <!-- Filters -->
@@ -63,105 +66,30 @@
                 <table class="table table-hover" id="tiresTable">
                     <thead>
                         <tr>
-                            <th data-sort="title">Title</th>
-                            <th data-sort="serial_number">Serial Number</th>
-                            <th data-sort="brand">Brand</th>
-                            <th data-sort="model">Model</th>
-                            <th data-sort="compound">Compound</th>
-                            <th data-sort="pattern">Pattern</th>
-                            <th data-sort="size">Size</th>
-                            <th data-sort="category">Category</th>
-                            <th data-sort="working_hours">Working Hours</th>
-                            <th data-sort="status">Status</th>
-                            <th data-sort="owner">Owner</th>
-                            <th>Operations</th>
+                            <th>Title</th>
+                            <th>Serial Number</th>
+                            <th>Brand</th>
+                            <th>Model</th>
+                            <th>Compound</th>
+                            <th>Pattern</th>
+                            <th>Size</th>
+                            <th>Category</th>
+                            <th>Working Hours</th>
+                            <th>Status</th>
+                            <th>Owner</th>
+                            {% if user.role == 'ADMIN' %}
+                            <th>Actions</th>
+                            {% endif %}
                         </tr>
                     </thead>
-                    <tbody>
-                        {% for tire in tires %}
-                        <tr>
-                            <td>{{ tire.title }}</td>
-                            <td>{{ tire.serial_number }}</td>
-                            <td>{{ tire.brand }}</td>
-                            <td>{{ tire.model }}</td>
-                            <td>{{ tire.compound }}</td>
-                            <td>{{ tire.pattern }}</td>
-                            <td>{{ tire.size }}</td>
-                            <td>{{ tire.category.name }}</td>
-                            <td>{{ tire.working_hours }}</td>
-                            <td>
-                                <span class="badge bg-{{ tire.status|lower }}">
-                                    {{ tire.get_status_display }}
-                                </span>
-                            </td>
-                            <td>{{ tire.owner.username }}</td>
-                            <td>
-                                <div class="btn-group">
-                                    <a href="{% url 'tire_edit' tire.id %}" class="btn btn-sm btn-outline-primary">
-                                        <i class="fas fa-edit"></i>
-                                    </a>
-                                    <button type="button" 
-                                            class="btn btn-sm btn-outline-danger delete-tire" 
-                                            data-tire-id="{{ tire.id }}"
-                                            data-tire-title="{{ tire.title }}"
-                                            data-bs-toggle="modal" 
-                                            data-bs-target="#deleteTireModal">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
-                        {% empty %}
-                        <tr>
-                            <td colspan="12" class="text-center">No tires found</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
+                    <tbody></tbody>
                 </table>
             </div>
-
-            <!-- Pagination -->
-            {% if tires.has_other_pages %}
-            <nav aria-label="Page navigation" class="mt-4">
-                <ul class="pagination justify-content-center">
-                    {% if tires.has_previous %}
-                    <li class="page-item">
-                        <a class="page-link" href="?page={{ tires.previous_page_number }}">Previous</a>
-                    </li>
-                    {% else %}
-                    <li class="page-item disabled">
-                        <span class="page-link">Previous</span>
-                    </li>
-                    {% endif %}
-
-                    {% for num in tires.paginator.page_range %}
-                        {% if tires.number == num %}
-                        <li class="page-item active">
-                            <span class="page-link">{{ num }}</span>
-                        </li>
-                        {% else %}
-                        <li class="page-item">
-                            <a class="page-link" href="?page={{ num }}">{{ num }}</a>
-                        </li>
-                        {% endif %}
-                    {% endfor %}
-
-                    {% if tires.has_next %}
-                    <li class="page-item">
-                        <a class="page-link" href="?page={{ tires.next_page_number }}">Next</a>
-                    </li>
-                    {% else %}
-                    <li class="page-item disabled">
-                        <span class="page-link">Next</span>
-                    </li>
-                    {% endif %}
-                </ul>
-            </nav>
-            {% endif %}
         </div>
     </div>
 </div>
 
+{% if user.role == 'ADMIN' %}
 <!-- Delete Confirmation Modal -->
 <div class="modal fade" id="deleteTireModal" tabindex="-1">
     <div class="modal-dialog">
@@ -181,44 +109,44 @@
         </div>
     </div>
 </div>
+{% endif %}
 {% endblock %}
-
 {% block extra_js %}
 <script>
 $(document).ready(function() {
-    // Initialize DataTable with AJAX
-    const table = $('#tiresTable').DataTable({
-        processing: true,
-        serverSide: false,
-        ajax: {
-            url: '/api/tires/',
-            type: 'GET',
-            data: function(d) {
-                // Return only the filter parameters, remove pagination
-                return {
-                    brand: $('input[name="brand"]').val() || '',
-                    model: $('input[name="model"]').val() || '',
-                    status: $('select[name="status"]').val() || '',
-                    category: $('select[name="category"]').val() || ''
-                };
-            },
-            beforeSend: function(xhr) {
-                const token = localStorage.getItem('access_token');
-                if (token) {
-                    xhr.setRequestHeader('Authorization', `Bearer ${token}`);
-                }
-            },
-            dataSrc: function(json) {
-                return json.results || json || [];
-            },
-            error: function(xhr, error, thrown) {
-                console.error('AJAX Error:', error);
-                if (xhr.responseJSON) {
-                    console.error('Server Response:', xhr.responseJSON);
+    const isAdmin = '{{ user.role }}' === 'ADMIN';
+    
+    // Get CSRF token from the cookie
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
                 }
             }
-        },
-        columns: [
+        }
+        return cookieValue;
+    }
+
+    // Setup AJAX defaults
+    $.ajaxSetup({
+        beforeSend: function(xhr, settings) {
+            if (!(/^(GET|HEAD|OPTIONS|TRACE)$/.test(settings.type)) && !this.crossDomain) {
+                xhr.setRequestHeader("X-CSRFToken", getCookie('csrftoken'));
+            }
+            const token = localStorage.getItem('access_token');
+            if (token) {
+                xhr.setRequestHeader('Authorization', `Bearer ${token}`);
+            }
+        }
+    });
+
+    try {
+        const baseColumns = [
             { data: 'title', defaultContent: '' },
             { data: 'serial_number', defaultContent: '' },
             { data: 'brand', defaultContent: '' },
@@ -238,91 +166,196 @@ $(document).ready(function() {
                 data: 'status',
                 defaultContent: '',
                 render: function(data) {
-                    return data ? `<span class="badge bg-${data.toLowerCase()}">${data}</span>` : '';
+                    let statusText = data ? data.replace(/_/g, ' ') : '';
+                    let bgClass = 'bg-secondary'; // Default color
+                    
+                    switch(data) {
+                        case 'IN_USE':
+                            bgClass = 'bg-success';
+                            break;
+                        case 'IN_REPAIR':
+                            bgClass = 'bg-warning text-dark';
+                            break;
+                        case 'DISPOSED':
+                            bgClass = 'bg-danger';
+                            break;
+                        case 'ORDERED':
+                            bgClass = 'bg-info';
+                            break;
+                        case 'DELIVERED':
+                            bgClass = 'bg-primary';
+                            break;
+                        case 'WAREHOUSING':
+                            bgClass = 'bg-info';
+                            break;
+                        case 'CUSTOMS_CLEARANCE':
+                            bgClass = 'bg-warning text-dark';
+                            break;
+                        case 'CURRENCY_ALLOCATION':
+                            bgClass = 'bg-info';
+                            break;
+                    }
+                    
+                    return statusText ? `<span class="badge ${bgClass}">${statusText}</span>` : '';
                 }
             },
-            { data: 'owner_username', defaultContent: '' },
-            { 
-                data: 'id',
-                orderable: false,
-                render: function(data, type, row) {
-                    if (!data) return '';
-                    return `
-                        <div class="btn-group">
-                            <a href="/tires/${data}/edit/" class="btn btn-sm btn-outline-primary">
-                                <i class="fas fa-edit"></i>
-                            </a>
-                            <button type="button" 
-                                    class="btn btn-sm btn-outline-danger delete-tire" 
-                                    data-tire-id="${data}"
-                                    data-tire-title="${row.title || ''}"
-                                    data-bs-toggle="modal" 
-                                    data-bs-target="#deleteTireModal">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </div>
-                    `;
-                }
+            { data: 'owner_username', defaultContent: '' }
+        ];
+
+        const columns = isAdmin ? [...baseColumns, {
+            data: null,
+            defaultContent: '',
+            orderable: false,
+            render: function(data, type, row) {
+                if (!row || !row.id) return '';
+                return `
+                    <div class="btn-group">
+                        <a href="/tires/${row.id}/edit/" class="btn btn-sm btn-outline-primary">
+                            <i class="fas fa-edit"></i>
+                        </a>
+                        <button type="button" 
+                                class="btn btn-sm btn-outline-danger delete-tire" 
+                                data-tire-id="${row.id}"
+                                data-tire-title="${row.title || ''}"
+                                data-bs-toggle="modal" 
+                                data-bs-target="#deleteTireModal">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                `;
             }
-        ],
-        pageLength: 10,
-        lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "All"]],
-        order: [[0, 'desc']],
-        language: {
-            emptyTable: "No tires found",
-            zeroRecords: "No matching tires found",
-            info: "Showing _START_ to _END_ of _TOTAL_ tires",
-            infoEmpty: "Showing 0 to 0 of 0 tires",
-            infoFiltered: "(filtered from _MAX_ total tires)"
-        }
-    });
-
-    // Handle filter form submission
-    $('#filterForm').on('submit', function(e) {
-        e.preventDefault();
-        table.ajax.reload();
-    });
-
-    // Clear filters
-    $('#clearFilters').on('click', function() {
-        $('#filterForm')[0].reset();
-        table.ajax.reload();
-    });
-
-    // Reinitialize delete buttons after DataTable updates
-    $('#tiresTable').on('draw.dt', function() {
-        $('.delete-tire').off('click').on('click', function() {
-            const tireId = $(this).data('tire-id');
-            const tireTitle = $(this).data('tire-title');
-            $('#tireToDelete').text(tireTitle);
-            $('#confirmDelete').data('tire-id', tireId);
-        });
-    });
-
-    // Handle delete confirmation
-    $('#confirmDelete').on('click', function() {
-        const tireId = $(this).data('tire-id');
-        if (tireId) {
-            $.ajax({
-                url: `/tires/${tireId}/delete/`,
-                method: 'POST',
-                headers: {
-                    'X-CSRFToken': $('[name=csrfmiddlewaretoken]').val()
-                },
-                success: function() {
-                    $('#deleteTireModal').modal('hide');
-                    table.ajax.reload();
-                },
-                error: function(xhr) {
-                    let errorMsg = 'Failed to delete tire';
-                    if (xhr.responseJSON && xhr.responseJSON.error) {
-                        errorMsg = xhr.responseJSON.error;
+        }] : baseColumns;
+        const table = $('#tiresTable').DataTable({
+            processing: true,
+            serverSide: false,
+            ajax: {
+                url: '/api/tires/',
+                type: 'GET',
+                data: function(d) {
+                    // Get current page from URL or default to 1
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const currentPage = parseInt(urlParams.get('page')) || 1;
+                    
+                    // Add filter form data
+                    const filterData = new FormData($('#filterForm')[0]);
+                    let params = {
+                        page: currentPage
+                    };
+                    
+                    // Add non-empty filter values
+                    for (let pair of filterData.entries()) {
+                        if (pair[1]) {
+                            params[pair[0]] = pair[1];
+                        }
                     }
-                    alert(errorMsg);
+                    
+                    return params;
+                },
+                error: function(xhr, error, thrown) {
+                    console.error('AJAX Error:', error);
+                    if (xhr.status === 401) {
+                        window.location.href = '/accounts/login/';
+                    } else if (xhr.status === 429) {
+                        console.error('Rate limit exceeded. Please wait before making more requests.');
+                    }
+                },
+                dataSrc: function(json) {
+                    console.log('API Response:', json);
+                    updatePagination(json);
+                    return json.results || [];
+                }
+            },
+            columns: columns,
+            dom: 'lrti',
+            paging: false,
+            responsive: true,
+            language: {
+                emptyTable: "No tires found",
+                zeroRecords: "No matching tires found",
+                info: "Showing _START_ to _END_ of _TOTAL_ tires",
+                infoEmpty: "Showing 0 to 0 of 0 tires",
+                infoFiltered: "(filtered from _MAX_ total tires)"
+            }
+        });
+
+        function updatePagination(json) {
+            if (!json.count) return;
+
+            const pageSize = 10; // Items per page
+            const totalPages = Math.ceil(json.count / pageSize);
+            const urlParams = new URLSearchParams(window.location.search);
+            const currentPage = parseInt(urlParams.get('page')) || 1;
+
+            let paginationHtml = `
+                <nav aria-label="Page navigation" class="mt-4">
+                    <ul class="pagination justify-content-center">
+                        <li class="page-item ${currentPage === 1 ? 'disabled' : ''}">
+                            <a class="page-link" href="#" data-page="${currentPage - 1}">Previous</a>
+                        </li>
+            `;
+
+            for (let i = 1; i <= totalPages; i++) {
+                paginationHtml += `
+                    <li class="page-item ${currentPage === i ? 'active' : ''}">
+                        <a class="page-link" href="#" data-page="${i}">${i}</a>
+                    </li>
+                `;
+            }
+
+            paginationHtml += `
+                        <li class="page-item ${currentPage === totalPages ? 'disabled' : ''}">
+                            <a class="page-link" href="#" data-page="${currentPage + 1}">Next</a>
+                        </li>
+                    </ul>
+                </nav>
+            `;
+
+            // Replace existing pagination, but only in the table's card body
+            $('.pagination').remove();
+            $('#tiresTable').closest('.card-body').append(paginationHtml);
+
+            // Add click handlers for pagination
+            $('.pagination .page-link').on('click', function(e) {
+                e.preventDefault();
+                const page = $(this).data('page');
+                if (page && !$(this).parent().hasClass('disabled')) {
+                    // Update URL without reloading the page
+                    const newUrl = updateURLParameter(window.location.href, 'page', page);
+                    window.history.pushState({ path: newUrl }, '', newUrl);
+                    // Reload the data
+                    table.ajax.reload();
                 }
             });
         }
-    });
+
+        // Helper function to update URL parameters
+        function updateURLParameter(url, param, value) {
+            const urlObj = new URL(url);
+            urlObj.searchParams.set(param, value);
+            return urlObj.toString();
+        }
+
+        // Handle filter form submission
+        $('#filterForm').on('submit', function(e) {
+            e.preventDefault();
+            // Reset to page 1 when filtering
+            const newUrl = updateURLParameter(window.location.href, 'page', 1);
+            window.history.pushState({ path: newUrl }, '', newUrl);
+            table.ajax.reload();
+        });
+
+        // Clear filters
+        $('#clearFilters').on('click', function() {
+            $('#filterForm')[0].reset();
+            // Reset to page 1 when clearing filters
+            const newUrl = updateURLParameter(window.location.href, 'page', 1);
+            window.history.pushState({ path: newUrl }, '', newUrl);
+            table.ajax.reload();
+        });
+
+    } catch (error) {
+        console.error('DataTable initialization error:', error);
+    }
 });
 </script>
 {% endblock %}

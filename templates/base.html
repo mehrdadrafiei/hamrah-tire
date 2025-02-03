@@ -2,6 +2,7 @@
 {% load static %}
 <html lang="en">
 <head>
+    {% csrf_token %}
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Hamrah Tire Management{% endblock %}</title>
@@ -86,16 +87,20 @@
                                     <i class="fas fa-list me-2"></i>Show Tires
                                 </a>
                             </li>
+                            {% if user.role != 'TECHNICAL' %}
                             <li>
                                 <a class="nav-link ms-4" href="{% url 'tire_add' %}">
                                     <i class="fas fa-plus me-2"></i>Add New Tire
                                 </a>
                             </li>
+                            {% endif %}
+                            {% if user.role == 'ADMIN' %}
                             <li>
                                 <a class="nav-link ms-4" href="{% url 'tire_categories' %}">
                                     <i class="fas fa-tags me-2"></i>Categories
                                 </a>
                             </li>
+                            {% endif %}
                         </ul>
                     </li>
                     

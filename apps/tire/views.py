@@ -14,13 +14,17 @@ from .forms import TireForm
 
 @login_required
 def tire_list_view(request):
+    """View for listing all tires."""
     # Get all tires based on user role
     if request.user.role == 'ADMIN':
         tires = Tire.objects.all()
+        can_edit = True
     elif request.user.role == 'MINER':
         tires = Tire.objects.filter(owner=request.user)
+        can_edit = True
     else:  # TECHNICAL
-        tires = Tire.objects.filter(status='IN_USE')
+        tires = Tire.objects.all()
+        can_edit = False
 
     # Apply filters
     brand = request.GET.get('brand')
@@ -47,14 +51,17 @@ def tire_list_view(request):
     context = {
         'tires': tires,
         'status_choices': Tire.STATUS_CHOICES,
-        'categories': TireCategory.objects.all()
+        'categories': TireCategory.objects.all(),
+        'can_edit': can_edit,
+        'user_role': request.user.role
     }
     return render(request, 'tire/tire_list.html', context)
 
 @login_required
 @role_required(['ADMIN'])
 def tire_categories_view(request):
-    if request.method == 'POST':
+    """View for listing tire categories (all users can view, only admin can modify)."""
+    if request.method == 'POST' and request.user.role == 'ADMIN':
         category_id = request.POST.get('category_id')
         if category_id:  # Edit existing category
             category = get_object_or_404(TireCategory, id=category_id)
@@ -71,11 +78,17 @@ def tire_categories_view(request):
         return redirect('tire_categories')
         
     categories = TireCategory.objects.all().order_by('name')
-    return render(request, 'tire/categories.html', {'categories': categories})
+    return render(request, 'tire/categories.html', {
+        'categories': categories,
+        'can_edit': request.user.role == 'ADMIN'
+    })
 
 @login_required
 @role_required(['ADMIN'])
 def tire_add_view(request):
+    if request.user.role != 'ADMIN':
+        messages.error(request, 'You do not have permission to add tires.')
+        return redirect('tire_list')
     if request.method == 'POST':
         form = TireForm(request.POST)
         if form.is_valid():
@@ -96,6 +109,9 @@ def tire_add_view(request):
 @login_required
 @role_required(['ADMIN'])
 def tire_edit_view(request, pk):
+    if request.user.role != 'ADMIN':
+        messages.error(request, 'You do not have permission to edit tires.')
+        return redirect('tire_list')
     tire = get_object_or_404(Tire, pk=pk)
     if request.method == 'POST':
         form = TireForm(request.POST, instance=tire)
@@ -136,6 +152,8 @@ def tire_delete_view(request, pk):
 @login_required
 @role_required(['ADMIN'])
 def category_delete_view(request, pk):
+    if request.user.role != 'ADMIN':
+        return JsonResponse({'error': 'Permission denied'}, status=403)
     if request.method == 'POST':
         category = get_object_or_404(TireCategory, pk=pk)
         category.delete()

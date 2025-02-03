@@ -17,19 +17,49 @@ const AuthUtils = {
     },
 
     setupAjaxHeaders: function() {
+        // Get CSRF token
+        function getCsrfToken() {
+            // Try to get from form
+            const tokenInputs = document.querySelectorAll('[name=csrfmiddlewaretoken]');
+            if (tokenInputs && tokenInputs.length > 0) {
+                return tokenInputs[0].value;
+            }
+            
+            // Fallback to cookie
+            return AuthUtils.getCookie('csrftoken');
+        }
+
         $.ajaxSetup({
             beforeSend: function(xhr, settings) {
-                // Add CSRF token for non-GET requests
+                // Add CSRF token if needed
                 if (!/^(GET|HEAD|OPTIONS|TRACE)$/i.test(settings.type) && !this.crossDomain) {
-                    xhr.setRequestHeader("X-CSRFToken", $('meta[name="csrf-token"]').attr('content'));
+                    const csrfToken = getCsrfToken();
+                    if (csrfToken) {
+                        xhr.setRequestHeader("X-CSRFToken", csrfToken);
+                    }
                 }
-                // Add Authorization header if token exists
+                // Add Authorization if token exists
                 const token = localStorage.getItem('access_token');
                 if (token) {
                     xhr.setRequestHeader('Authorization', `Bearer ${token}`);
                 }
             }
         });
+    },
+
+    getCookie: function(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
     },
 
     handleUnauthorized: function() {
@@ -111,33 +141,53 @@ const AuthUtils = {
 
 // Initialize authentication utilities
 $(document).ready(function() {
-    // This is causing problems - remove it
-    // if (!AuthUtils.isAuthenticated() && window.location.pathname !== '/accounts/login/') {
-    //     window.location.href = '/accounts/login/';
-    //     return;
-    // }
+    try {
+        // Setup AJAX headers - Modified to handle missing CSRF token gracefully
+        AuthUtils.setupAjaxHeaders = function() {
+            // Get CSRF token from various sources
+            const csrfToken = 
+                document.querySelector('[name=csrfmiddlewaretoken]')?.value || 
+                AuthUtils.getCookie('csrftoken');
 
-    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-
-    AuthUtils.setupAjaxHeaders = function() {
-        $.ajaxSetup({
-            beforeSend: function(xhr, settings) {
-                if (!/^(GET|HEAD|OPTIONS|TRACE)$/i.test(settings.type) && !this.crossDomain) {
-                    xhr.setRequestHeader("X-CSRFToken", csrfToken);
+            $.ajaxSetup({
+                beforeSend: function(xhr, settings) {
+                    // Add CSRF token if needed
+                    if (!/^(GET|HEAD|OPTIONS|TRACE)$/i.test(settings.type) && !this.crossDomain) {
+                        if (csrfToken) {
+                            xhr.setRequestHeader("X-CSRFToken", csrfToken);
+                        }
+                    }
+                    // Add Authorization token if exists
+                    const token = localStorage.getItem('access_token');
+                    if (token) {
+                        xhr.setRequestHeader('Authorization', `Bearer ${token}`);
+                    }
                 }
-            }
-        });
-    };
+            });
+        };
 
-    // Keep this part
-    $('#logoutBtn').click(function(e) {
-        e.preventDefault();
-        AuthUtils.logout();
-    });
+        // Initialize headers
+        AuthUtils.setupAjaxHeaders();
+        
+        // Handle unauthorized access
+        AuthUtils.handleUnauthorized();
 
-    const userRole = AuthUtils.getUserRole();
-    if (userRole) {
-        $('.role-specific').hide();
-        $(`.role-${userRole.toLowerCase()}`).show();
+        // Handle logout button if it exists
+        const logoutBtn = document.getElementById('logoutBtn');
+        if (logoutBtn) {
+            logoutBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                AuthUtils.logout();
+            });
+        }
+
+        // Show/hide role-specific elements
+        const userRole = AuthUtils.getUserRole();
+        if (userRole) {
+            $('.role-specific').hide();
+            $(`.role-${userRole.toLowerCase()}`).show();
+        }
+    } catch (error) {
+        console.error('Auth initialization error:', error);
     }
 });

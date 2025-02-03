@@ -17,6 +17,12 @@ from .serializers import (
 )
 from ..filters import TireFilter
 from ..permissions import TirePermission, RepairRequestPermission, TechnicalReportPermission
+from rest_framework.pagination import PageNumberPagination
+
+class CustomPageNumberPagination(PageNumberPagination):
+    page_size = 10
+    page_size_query_param = 'page_size'
+    max_page_size = 100
 
 @extend_schema(tags=['Tires'])
 class TireViewSet(viewsets.ModelViewSet):
@@ -26,6 +32,7 @@ class TireViewSet(viewsets.ModelViewSet):
     ordering = ['-purchase_date']
     permission_classes = [IsAuthenticated, TirePermission]
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    pagination_class = CustomPageNumberPagination
 
     def get_serializer_class(self):
         if self.action == 'list':
@@ -50,6 +57,11 @@ class TireViewSet(viewsets.ModelViewSet):
     def list(self, request, *args, **kwargs):
         try:
             queryset = self.filter_queryset(self.get_queryset())
+            page = self.paginate_queryset(queryset)
+            if page is not None:
+                serializer = self.get_serializer(page, many=True)
+                return self.get_paginated_response(serializer.data)
+            
             serializer = self.get_serializer(queryset, many=True)
             return Response(serializer.data)
         except Exception as e:

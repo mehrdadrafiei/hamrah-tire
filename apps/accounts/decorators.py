@@ -1,9 +1,8 @@
-# apps/accounts/decorators.py
 from functools import wraps
-from pyexpat.errors import messages
 from django.shortcuts import redirect
-from django.http import HttpResponseForbidden
+from django.contrib import messages
 from rest_framework_simplejwt.authentication import JWTAuthentication
+from django.http import HttpResponseForbidden
 from django.contrib.auth import get_user_model
 
 User = get_user_model()
