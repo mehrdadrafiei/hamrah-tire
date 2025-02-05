@@ -17,13 +17,18 @@ from .forms import (
     RepairRequestForm,
     TechnicalReportForm
 )
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect,get_object_or_404
 from django.contrib import messages
 from django.core.exceptions import ValidationError
 from .forms import PasswordResetRequestForm, PasswordResetConfirmForm
 from django.contrib.auth import login
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.views.decorators.csrf import ensure_csrf_cookie
+
+from django.core.mail import send_mail
+from django.template.loader import render_to_string
+from django.utils.html import strip_tags
+from django.conf import settings
 
 @ensure_csrf_cookie
 def login_view(request):
@@ -121,33 +126,7 @@ def change_password_view(request):
     
     return render(request, 'accounts/change_password.html', {'form': form})
 
-@user_passes_test(lambda u: u.role == 'ADMIN')
-def user_list_view(request):
-    """View for listing all users (admin only)."""
-    users = User.objects.all().order_by('-date_joined')
-    paginator = Paginator(users, 10)
-    page = request.GET.get('page')
-    users = paginator.get_page(page)
-    return render(request, 'accounts/user_list.html', {'users': users})
 
-
-# @login_required
-# def tire_detail_view(request, pk):
-#     """Detailed view of a tire."""
-#     tire = get_object_or_404(Tire, pk=pk)
-#     if request.user.role == 'MINER' and tire.owner != request.user:
-#         messages.error(request, 'You do not have permission to view this tire.')
-#         return redirect('tire_list')
-        
-#     context = {
-#         'tire': tire,
-#         'repair_requests': tire.repairrequest_set.all().order_by('-request_date'),
-#         'technical_reports': tire.technicalreport_set.all().order_by('-inspection_date'),
-#         'warranty': getattr(tire, 'warranty', None)
-#     }
-#     return render(request, 'tire/tire_detail.html', context)
-
-# Helper functions
 def get_recent_activities():
     """Get combined recent activities from different models."""
     activities = []
@@ -283,3 +262,225 @@ def messages_view(request):
         # Handle new message
         return JsonResponse({'status': 'success'})
     return JsonResponse({'messages': []})
+
+def send_verification_email(user):
+    """Helper function to send verification email."""
+    token = user.generate_verification_token()
+    # Change this line to match your URL pattern
+    verification_url = f"{settings.FRONTEND_URL}/accounts/verify-email/{token}/"
+    
+    # Rest of the function remains the same
+    context = {
+        'username': user.username,
+        'verification_url': verification_url
+    }
+    html_message = render_to_string('accounts/email/verify_email.html', context)
+    plain_message = strip_tags(html_message)
+    
+    try:
+        send_mail(
+            subject='Verify Your Email - Hamrah Tire',
+            message=plain_message,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[user.email],
+            html_message=html_message,
+            fail_silently=False,
+        )
+        return True
+    except Exception as e:
+        print(f"Failed to send verification email: {str(e)}")
+        return False
+
+def verify_email_view(request, token):
+    """Handle email verification."""
+    try:
+        user = User.objects.get(email_verification_token=token)
+        if user.verify_email(token):
+            messages.success(request, 'Your email has been successfully verified. You can now log in.')
+            return redirect('login')
+        else:
+            messages.error(request, 'The verification link has expired. Please request a new one.')
+            return redirect('login')
+    except User.DoesNotExist:
+        messages.error(request, 'Invalid verification link.')
+        return redirect('login')
+    
+@role_required(['ADMIN'])
+def user_list_view(request):
+    """View for listing and managing users."""
+    users = User.objects.all().order_by('-date_joined')
+    # paginator = Paginator(users, 10)
+    # page = request.GET.get('page')
+    # users = paginator.get_page(page)
+    return render(request, 'accounts/user_list.html', {'users': users})
+
+@role_required(['ADMIN'])
+def user_add_view(request):
+    """View for adding new users."""
+    if request.method == 'POST':
+        try:
+            # Create user
+            user = User.objects.create_user(
+                username=request.POST['username'],
+                email=request.POST['email'],
+                password=request.POST['password'],
+                role=request.POST['role']
+            )
+            
+            # Send verification email
+            if send_verification_email(user):
+                return JsonResponse({
+                    'status': 'success',
+                    'message': 'User created successfully. Verification email sent.'
+                })
+            else:
+                return JsonResponse({
+                    'status': 'warning',
+                    'message': 'User created but failed to send verification email.'
+                })
+        except Exception as e:
+            return JsonResponse({
+                'status': 'error', 
+                'message': str(e)
+            }, status=400)
+    return JsonResponse({
+        'status': 'error', 
+        'message': 'Invalid request'
+    }, status=405)
+
+@role_required(['ADMIN'])
+def user_edit_view(request, user_id):
+    """View for editing users."""
+    if request.method == 'POST':
+        try:
+            user = get_object_or_404(User, id=user_id)
+            old_email = user.email
+            
+            user.username = request.POST['username']
+            user.email = request.POST['email']
+            user.role = request.POST['role']
+            
+            # Only update password if provided
+            new_password = request.POST.get('password')
+            if new_password:
+                user.set_password(new_password)
+            
+            # Check if email changed
+            email_changed = old_email != user.email
+            if email_changed:
+                user.email_verified = False
+            
+            user.save()
+            
+            # Send new verification email if email changed
+            if email_changed:
+                if send_verification_email(user):
+                    return JsonResponse({
+                        'status': 'success',
+                        'message': 'User updated and verification email sent.'
+                    })
+                else:
+                    return JsonResponse({
+                        'status': 'warning',
+                        'message': 'User updated but failed to send verification email.'
+                    })
+            
+            return JsonResponse({
+                'status': 'success',
+                'message': 'User updated successfully'
+            })
+            
+        except Exception as e:
+            return JsonResponse({
+                'status': 'error', 
+                'message': str(e)
+            }, status=400)
+            
+    return JsonResponse({
+        'status': 'error', 
+        'message': 'Invalid request'
+    }, status=405)
+
+@role_required(['ADMIN'])
+def user_activate_view(request, user_id):
+    """View for activating users."""
+    if request.method == 'POST':
+        try:
+            user = get_object_or_404(User, id=user_id)
+            user.is_active = True
+            user.save()
+            return JsonResponse({
+                'status': 'success',
+                'message': 'User activated successfully'
+            })
+        except Exception as e:
+            return JsonResponse({
+                'status': 'error', 
+                'message': str(e)
+            }, status=400)
+    return JsonResponse({
+        'status': 'error', 
+        'message': 'Invalid request'
+    }, status=405)
+
+@role_required(['ADMIN'])
+def user_deactivate_view(request, user_id):
+    """View for deactivating users."""
+    if request.method == 'POST':
+        try:
+            user = get_object_or_404(User, id=user_id)
+            # Prevent deactivating the last admin
+            if user.role == 'ADMIN' and User.objects.filter(role='ADMIN', is_active=True).count() <= 1:
+                return JsonResponse({
+                    'status': 'error',
+                    'message': 'Cannot deactivate the last admin user'
+                }, status=400)
+            
+            user.is_active = False
+            user.save()
+            return JsonResponse({
+                'status': 'success',
+                'message': 'User deactivated successfully'
+            })
+        except Exception as e:
+            return JsonResponse({
+                'status': 'error', 
+                'message': str(e)
+            }, status=400)
+    return JsonResponse({
+        'status': 'error', 
+        'message': 'Invalid request'
+    }, status=405)
+
+@role_required(['ADMIN'])
+def resend_verification_email_view(request, user_id):
+    """View for resending verification emails."""
+    if request.method == 'POST':
+        try:
+            user = get_object_or_404(User, id=user_id)
+            if user.email_verified:
+                return JsonResponse({
+                    'status': 'error',
+                    'message': 'User email is already verified'
+                }, status=400)
+            
+            if send_verification_email(user):
+                return JsonResponse({
+                    'status': 'success',
+                    'message': 'Verification email sent successfully'
+                })
+            else:
+                return JsonResponse({
+                    'status': 'error',
+                    'message': 'Failed to send verification email'
+                }, status=500)
+                
+        except Exception as e:
+            return JsonResponse({
+                'status': 'error', 
+                'message': str(e)
+            }, status=400)
+    return JsonResponse({
+        'status': 'error', 
+        'message': 'Invalid request'
+    }, status=405)

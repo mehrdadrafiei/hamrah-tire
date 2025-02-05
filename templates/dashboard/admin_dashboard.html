@@ -1,142 +1,215 @@
-{% extends "base.html" %}
+{% extends "base.html" %} 
 
 {% block title %}Admin Dashboard - Hamrah Tire{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
 
 {% block content %}
-<div class="container-fluid">
-    <!-- Page Title -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1 class="h3">Admin Dashboard</h1>
-        <div class="btn-group">
-            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addUserModal">
-                <i class="fas fa-user-plus me-2"></i>Add User
-            </button>
-            <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addTireModal">
-                <i class="fas fa-plus me-2"></i>Add Tire
-            </button>
-        </div>
-    </div>
-
-    <!-- Statistics Cards -->
-    <div class="row mb-4">
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-left-primary shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Total Users</div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_users }}</div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-users fa-2x text-gray-300"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-left-success shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Active Tires</div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ active_tires }}</div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-tire fa-2x text-gray-300"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-left-warning shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Pending Repairs</div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ pending_repairs }}</div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-wrench fa-2x text-gray-300"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-left-info shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Reports This Month</div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ monthly_reports }}</div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-clipboard-list fa-2x text-gray-300"></i>
-                        </div>
-                    </div>
-                </div>
+<!-- Info boxes -->
+<div class="row">
+    <div class="col-12 col-sm-6 col-md-3">
+        <div class="info-box">
+            <span class="info-box-icon bg-info elevation-1"><i class="fas fa-users"></i></span>
+            <div class="info-box-content">
+                <span class="info-box-text">Total Users</span>
+                <span class="info-box-number">{{ total_users }}</span>
             </div>
         </div>
     </div>
+    <div class="col-12 col-sm-6 col-md-3">
+        <div class="info-box mb-3">
+            <span class="info-box-icon bg-success elevation-1"><i class="fas fa-truck"></i></span>
+            <div class="info-box-content">
+                <span class="info-box-text">Active Tires</span>
+                <span class="info-box-number">{{ active_tires }}</span>
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-sm-6 col-md-3">
+        <div class="info-box mb-3">
+            <span class="info-box-icon bg-warning elevation-1"><i class="fas fa-wrench"></i></span>
+            <div class="info-box-content">
+                <span class="info-box-text">Pending Repairs</span>
+                <span class="info-box-number">{{ pending_repairs }}</span>
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-sm-6 col-md-3">
+        <div class="info-box mb-3">
+            <span class="info-box-icon bg-danger elevation-1"><i class="fas fa-clipboard-list"></i></span>
+            <div class="info-box-content">
+                <span class="info-box-text">Monthly Reports</span>
+                <span class="info-box-number">{{ monthly_reports }}</span>
+            </div>
+        </div>
+    </div>
+</div>
 
-    <!-- Recent Activity and Alerts -->
-    <div class="row">
-        <!-- Recent Activity -->
-        <div class="col-xl-8 col-lg-7">
-            <div class="card shadow mb-4">
-                <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">Recent Activity</h6>
+<!-- Main row -->
+<div class="row">
+    <!-- Left col -->
+    <section class="col-lg-7 connectedSortable">
+        <!-- Recent Activity Card -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <i class="fas fa-history mr-1"></i>
+                    Recent Activity
+                </h3>
+                <div class="card-tools">
+                    <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                        <i class="fas fa-minus"></i>
+                    </button>
                 </div>
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-hover" id="recentActivityTable">
-                            <thead>
-                                <tr>
-                                    <th>Time</th>
-                                    <th>User</th>
-                                    <th>Action</th>
-                                    <th>Details</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for activity in recent_activities %}
-                                <tr>
-                                    <td>{{ activity.timestamp }}</td>
-                                    <td>{{ activity.user }}</td>
-                                    <td>{{ activity.action }}</td>
-                                    <td>{{ activity.details }}</td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th style="width: 20%">Time</th>
+                                <th style="width: 20%">User</th>
+                                <th style="width: 20%">Action</th>
+                                <th style="width: 40%">Details</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for activity in recent_activities %}
+                            <tr>
+                                <td>{{ activity.timestamp }}</td>
+                                <td>{{ activity.user }}</td>
+                                <td>{{ activity.action }}</td>
+                                <td>{{ activity.details }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center">No recent activities</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
 
-        <!-- Alerts -->
-        <div class="col-xl-4 col-lg-5">
-            <div class="card shadow mb-4">
-                <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">System Alerts</h6>
+        <!-- Critical Issues Card -->
+        <div class="card">
+            <div class="card-header border-0">
+                <h3 class="card-title">
+                    <i class="fas fa-exclamation-circle mr-1"></i>
+                    Critical Issues
+                </h3>
+                <div class="card-tools">
+                    <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                        <i class="fas fa-minus"></i>
+                    </button>
                 </div>
-                <div class="card-body">
+            </div>
+            <div class="card-body table-responsive p-0">
+                <table class="table table-hover table-striped">
+                    <thead>
+                        <tr>
+                            <th>Tire</th>
+                            <th>Issue</th>
+                            <th>Reported</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for issue in critical_issues %}
+                        <tr>
+                            <td>{{ issue.tire.serial_number }}</td>
+                            <td>{{ issue.notes }}</td>
+                            <td>{{ issue.inspection_date }}</td>
+                            <td>
+                                <span class="badge badge-{% if issue.resolved %}success{% else %}danger{% endif %}">
+                                    {% if issue.resolved %}Resolved{% else %}Pending{% endif %}
+                                </span>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="4" class="text-center">No critical issues found</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <!-- Right col -->
+    <section class="col-lg-5 connectedSortable">
+        <!-- System Alerts Card -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <i class="fas fa-bell mr-1"></i>
+                    System Alerts
+                </h3>
+                <div class="card-tools">
+                    <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                        <i class="fas fa-minus"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                <ul class="products-list product-list-in-card pl-2 pr-2">
                     {% for alert in system_alerts %}
-                    <div class="alert alert-{{ alert.level }} mb-2">
-                        {{ alert.message }}
-                    </div>
+                    <li class="item">
+                        <div class="product-info">
+                            <a href="javascript:void(0)" class="product-title">
+                                {% if alert.level == 'danger' %}
+                                <span class="badge badge-danger float-right">Critical</span>
+                                {% elif alert.level == 'warning' %}
+                                <span class="badge badge-warning float-right">Warning</span>
+                                {% else %}
+                                <span class="badge badge-info float-right">Info</span>
+                                {% endif %}
+                            </a>
+                            <span class="product-description">
+                                {{ alert.message }}
+                            </span>
+                        </div>
+                    </li>
                     {% empty %}
-                    <p class="text-center text-muted">No active alerts</p>
+                    <li class="item">
+                        <div class="product-info text-center">
+                            No active alerts
+                        </div>
+                    </li>
                     {% endfor %}
+                </ul>
+            </div>
+        </div>
+
+        <!-- Quick Actions Card -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <i class="fas fa-bolt mr-1"></i>
+                    Quick Actions
+                </h3>
+                <div class="card-tools">
+                    <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                        <i class="fas fa-minus"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="btn-group-vertical w-100">
+                    <button type="button" class="btn btn-primary mb-2" data-toggle="modal" data-target="#addUserModal">
+                        <i class="fas fa-user-plus mr-2"></i>Add User
+                    </button>
+                    <button type="button" class="btn btn-success mb-2" data-toggle="modal" data-target="#addTireModal">
+                        <i class="fas fa-plus mr-2"></i>Add Tire
+                    </button>
+                    <button type="button" class="btn btn-info" onclick="window.location.href='{% url 'report_list' %}'">
+                        <i class="fas fa-clipboard-check mr-2"></i>View Reports
+                    </button>
                 </div>
             </div>
         </div>
-    </div>
+    </section>
 </div>
 
 <!-- Add User Modal -->
@@ -145,14 +218,36 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title">Add New User</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
             </div>
-            <form id="addUserForm">
+            <form id="addUserForm" method="POST" action="{% url 'user_add' %}">
+                {% csrf_token %}
                 <div class="modal-body">
-                    <!-- Form fields will be added here -->
+                    <div class="form-group">
+                        <label for="username">Username</label>
+                        <input type="text" class="form-control" id="username" name="username" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="email">Email</label>
+                        <input type="email" class="form-control" id="email" name="email" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="role">Role</label>
+                        <select class="form-control" id="role" name="role" required>
+                            <option value="ADMIN">Admin</option>
+                            <option value="TECHNICAL">Technical</option>
+                            <option value="MINER">Miner</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="password">Password</label>
+                        <input type="password" class="form-control" id="password" name="password" required>
+                    </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
                     <button type="submit" class="btn btn-primary">Add User</button>
                 </div>
             </form>
@@ -166,14 +261,44 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title">Add New Tire</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
             </div>
-            <form id="addTireForm">
+            <form id="addTireForm" method="POST" action="{% url 'tire_add' %}">
+                {% csrf_token %}
                 <div class="modal-body">
-                    <!-- Form fields will be added here -->
+                    <div class="form-group">
+                        <label for="serial_number">Serial Number</label>
+                        <input type="text" class="form-control" id="serial_number" name="serial_number" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="brand">Brand</label>
+                        <input type="text" class="form-control" id="brand" name="brand" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="model">Model</label>
+                        <input type="text" class="form-control" id="model" name="model" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="category">Category</label>
+                        <select class="form-control" id="category" name="category" required>
+                            {% for category in categories %}
+                            <option value="{{ category.id }}">{{ category.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="status">Status</label>
+                        <select class="form-control" id="status" name="status" required>
+                            {% for status in status_choices %}
+                            <option value="{{ status.0 }}">{{ status.1 }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
                     <button type="submit" class="btn btn-primary">Add Tire</button>
                 </div>
             </form>
@@ -185,106 +310,55 @@
 {% block extra_js %}
 <script>
 $(document).ready(function() {
-    // Check if user is already logged in
-    const token = localStorage.getItem('access_token');
-    const currentPath = window.location.pathname;
+    // Initialize DataTables
+    $('.table').DataTable({
+        "paging": true,
+        "lengthChange": false,
+        "searching": true,
+        "ordering": true,
+        "info": true,
+        "autoWidth": false,
+        "responsive": true,
+        "pageLength": 5
+    });
 
-    // Only redirect if we're not already on a dashboard page
-    if (token && !currentPath.includes('dashboard')) {
-        // Verify token and redirect to appropriate dashboard
-        checkAuthAndRedirect();
-    }
+    // Enable card widgets
+    $('.card-widget').CardWidget();
 
-    // Handle login form submission
-    $('#loginForm').on('submit', function(e) {
+    // Form validation and submission handling
+    $('#addUserForm').on('submit', function(e) {
         e.preventDefault();
-        
-        const loginButton = $('#loginButton');
-        loginButton.prop('disabled', true);
-        loginButton.find('.spinner-border').removeClass('d-none');
-        loginButton.find('.button-text').text('Logging in...');
-        
+        var form = $(this);
         $.ajax({
-            url: '{% url "api:auth:token_obtain_pair" %}',
+            url: form.attr('action'),
             method: 'POST',
-            data: {
-                username: $('#username').val(),
-                password: $('#password').val(),
-            },
+            data: form.serialize(),
             success: function(response) {
-                // Store tokens
-                localStorage.setItem('access_token', response.access);
-                localStorage.setItem('refresh_token', response.refresh);
-                
-                // Get user info and redirect
-                getUserInfoAndRedirect();
+                $('#addUserModal').modal('hide');
+                location.reload();
             },
             error: function(xhr) {
-                loginButton.prop('disabled', false);
-                loginButton.find('.spinner-border').addClass('d-none');
-                loginButton.find('.button-text').text('Login');
-
-                let error = 'Login failed. Please check your credentials.';
-                if (xhr.responseJSON && xhr.responseJSON.detail) {
-                    error = xhr.responseJSON.detail;
-                }
-                
-                $('#error-messages').html(`
-                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                        ${error}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                    </div>
-                `);
+                alert('Error adding user: ' + xhr.responseText);
             }
         });
     });
 
-    function getUserInfoAndRedirect() {
+    $('#addTireForm').on('submit', function(e) {
+        e.preventDefault();
+        var form = $(this);
         $.ajax({
-            url: '/api/users/me/',
-            method: 'GET',
-            headers: {
-                'Authorization': 'Bearer ' + localStorage.getItem('access_token')
-            },
+            url: form.attr('action'),
+            method: 'POST',
+            data: form.serialize(),
             success: function(response) {
-                localStorage.setItem('user_role', response.role);
-                window.location.href = getDashboardUrl(response.role);
+                $('#addTireModal').modal('hide');
+                location.reload();
             },
-            error: function() {
-                localStorage.clear();
-                $('#error-messages').html(`
-                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                        Failed to get user information. Please try again.
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                    </div>
-                `);
+            error: function(xhr) {
+                alert('Error adding tire: ' + xhr.responseText);
             }
         });
-    }
-
-    function getDashboardUrl(role) {
-        switch(role) {
-            case 'ADMIN': return '{% url "admin_dashboard" %}';
-            case 'MINER': return '{% url "miner_dashboard" %}';
-            case 'TECHNICAL': return '{% url "technical_dashboard" %}';
-            default: return '{% url "dashboard" %}';
-        }
-    }
-
-    function checkAuthAndRedirect() {
-        const token = localStorage.getItem('access_token');
-        if (token) {
-            getUserInfoAndRedirect();
-        }
-    }
-
-    // Initialize DataTables if they exist
-    if ($.fn.DataTable) {
-        $('#recentActivityTable').DataTable({
-            order: [[0, 'desc']],
-            pageLength: 5
-        });
-    }
+    });
 });
 </script>
 {% endblock %}

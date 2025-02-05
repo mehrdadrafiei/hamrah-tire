@@ -6,6 +6,12 @@ DEBUG = True
 
 ALLOWED_HOSTS = ['*']
 
+# This is important for serving static files in development
+STATICFILES_FINDERS = [
+    'django.contrib.staticfiles.finders.FileSystemFinder',
+    'django.contrib.staticfiles.finders.AppDirectoriesFinder',
+]
+
 # Database
 DATABASES = {
     'default': {

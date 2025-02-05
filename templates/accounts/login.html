@@ -1,71 +1,86 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block title %}Login - Hamrah Tire{% endblock %}
 
+{% block body_class %}hold-transition login-page{% endblock %}
+
 {% block auth_content %}
-<div class="container">
-    <div class="row justify-content-center align-items-center min-vh-100">
-        <div class="col-md-6 col-lg-4">
-            <div class="card shadow">
-                <div class="card-body">
-                    <h3 class="card-title text-center mb-4">Login to Hamrah Tire</h3>
-                    
-                    <form id="loginForm" method="POST" action="{% url 'login' %}">
-                        {% csrf_token %}
-                        
-                        {% if form.errors %}
-                        <div class="alert alert-danger">
-                            Invalid username or password.
-                        </div>
-                        {% endif %}
+<div class="login-box">
+  <div class="login-logo">
+    <a href="{% url 'login' %}"><b>Hamrah</b>Tire</a>
+  </div>
+  <!-- /.login-logo -->
+  <div class="card">
+    <div class="card-body login-card-body">
+      <p class="login-box-msg">Sign in to start your session</p>
 
-                        {% if messages %}
-                        <div class="messages">
-                            {% for message in messages %}
-                            <div class="alert alert-{{ message.tags }}">
-                                {{ message }}
-                            </div>
-                            {% endfor %}
-                        </div>
-                        {% endif %}
-
-                        <div class="mb-3">
-                            <label for="username" class="form-label">Username</label>
-                            <input type="text" class="form-control" id="username" name="username" required>
-                        </div>
-
-                        <div class="mb-3">
-                            <label for="password" class="form-label">Password</label>
-                            <div class="input-group">
-                                <input type="password" class="form-control" id="password" name="password" required>
-                                <button class="btn btn-outline-secondary" type="button" id="togglePassword">
-                                    <i class="fas fa-eye"></i>
-                                </button>
-                            </div>
-                        </div>
-
-                        <div class="mb-3 form-check">
-                            <input type="checkbox" class="form-check-input" id="rememberMe" name="remember">
-                            <label class="form-check-label" for="rememberMe">Remember me</label>
-                        </div>
-
-                        <div class="d-grid gap-2">
-                            <button type="submit" class="btn btn-primary" id="loginButton">
-                                <span class="spinner-border spinner-border-sm d-none" role="status"></span>
-                                <span class="button-text">Login</span>
-                            </button>
-                        </div>
-                    </form>
-
-                    <hr>
-                    <div class="text-center">
-                        <a href="{% url 'password_reset' %}" class="text-decoration-none">Forgot password?</a>
-                    </div>
-                </div>
-            </div>
+      <form id="loginForm" method="POST" action="{% url 'login' %}">
+        {% csrf_token %}
+        
+        {% if form.errors %}
+        <div class="alert alert-danger">
+            Invalid username or password.
         </div>
+        {% endif %}
+
+        {% if messages %}
+        <div class="messages">
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}">
+                {{ message }}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <div class="input-group mb-3">
+          <input type="text" class="form-control" id="username" name="username" placeholder="Username" required>
+          <div class="input-group-append">
+            <div class="input-group-text">
+              <span class="fas fa-user"></span>
+            </div>
+          </div>
+        </div>
+        <div class="input-group mb-3">
+          <input type="password" class="form-control" id="password" name="password" placeholder="Password" required>
+          <div class="input-group-append">
+            <div class="input-group-text">
+              <span class="fas fa-lock"></span>
+            </div>
+            <button type="button" class="btn btn-outline-secondary" id="togglePassword">
+              <i class="fas fa-eye"></i>
+            </button>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-8">
+            <div class="icheck-primary">
+              <input type="checkbox" id="rememberMe" name="remember">
+              <label for="rememberMe">
+                Remember Me
+              </label>
+            </div>
+          </div>
+          <!-- /.col -->
+          <div class="col-4">
+            <button type="submit" class="btn btn-primary btn-block" id="loginButton">
+              <span class="spinner-border spinner-border-sm d-none" role="status"></span>
+              <span class="button-text">Sign In</span>
+            </button>
+          </div>
+          <!-- /.col -->
+        </div>
+      </form>
+
+      <p class="mb-1">
+        <a href="{% url 'password_reset' %}">I forgot my password</a>
+      </p>
     </div>
+    <!-- /.login-card-body -->
+  </div>
 </div>
+<!-- /.login-box -->
 {% endblock %}
 
 {% block extra_js %}
@@ -90,7 +105,7 @@ $(document).ready(function() {
         const button = $('#loginButton');
         button.prop('disabled', true);
         button.find('.spinner-border').removeClass('d-none');
-        button.find('.button-text').text('Logging in...');
+        button.find('.button-text').text('Signing in...');
     });
 });
 </script>

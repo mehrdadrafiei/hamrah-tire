@@ -1,4 +1,4 @@
-from datetime import timezone
+from django.utils import timezone
 from django import forms
 from django.conf import settings
 from django.contrib.auth.forms import PasswordChangeForm
@@ -103,7 +103,7 @@ class PasswordResetRequestForm(forms.Form):
             token = user.generate_password_reset_token()
             
             # Send reset email
-            reset_url = f"{settings.FRONTEND_URL}/password-reset/confirm/{token}/"
+            reset_url = f"{settings.FRONTEND_URL}/accounts/password-reset/confirm/{token}/"
             send_mail(
                 'Password Reset Request',
                 f'Click here to reset your password: {reset_url}',

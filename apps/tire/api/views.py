@@ -16,7 +16,7 @@ from .serializers import (
     TechnicalReportSerializer
 )
 from ..filters import TireFilter
-from ..permissions import TirePermission, RepairRequestPermission, TechnicalReportPermission
+from .permissions import TirePermission, RepairRequestPermission, TechnicalReportPermission
 from rest_framework.pagination import PageNumberPagination
 
 class CustomPageNumberPagination(PageNumberPagination):

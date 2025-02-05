@@ -1,0 +1,415 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}User Management - Hamrah Tire{% endblock %}
+
+{% block extra_css %}
+<!-- DataTables -->
+<link rel="stylesheet" href="https://cdn.datatables.net/1.10.24/css/dataTables.bootstrap4.min.css">
+<link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.2.9/css/responsive.bootstrap4.min.css">
+<!-- Toastr -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/css/toastr.min.css">
+<style>
+    /* Custom scrollbar styles */
+    .table-responsive {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    /* Make DataTable responsive */
+    .dataTables_wrapper {
+        width: 100%;
+        margin: 0 auto;
+    }
+    
+    /* Ensure content stays within card */
+    .card-body {
+        padding: 1rem;
+    }
+    
+    @media screen and (max-width: 768px) {
+        .card-body {
+            padding: 0.5rem;
+        }
+        
+        .table td, .table th {
+            white-space: nowrap;
+        }
+        
+        /* Adjust button sizes for mobile */
+        .btn-sm {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.75rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content_header %}
+<div class="content-header">
+  <div class="container-fluid">
+    <div class="row mb-2">
+      <div class="col-sm-6">
+        <h1 class="m-0">User Management</h1>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<section class="content">
+  <div class="container-fluid">
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title">
+          <i class="fas fa-users mr-1"></i>
+          User List
+        </h3>
+        <div class="card-tools">
+          <button type="button" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#addUserModal">
+            <i class="fas fa-user-plus mr-1"></i> Add New User
+          </button>
+        </div>
+      </div>
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table id="usersTable" class="table table-bordered table-striped table-hover">
+            <thead>
+              <tr>
+                <th>Username</th>
+                <th>Email</th>
+                <th>Role</th>
+                <th>Status</th>
+                <th>Email Verified</th>
+                <th>Last Login</th>
+                <th style="width: 120px">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for user in users %}
+              <tr id="user-row-{{ user.id }}">
+                <td class="user-username">{{ user.username }}</td>
+                <td class="user-email">{{ user.email }}</td>
+                <td class="user-role">
+                  <span class="badge badge-info">{{ user.get_role_display }}</span>
+                </td>
+                <td class="user-status">
+                  {% if user.is_active %}
+                  <span class="badge badge-success">Active</span>
+                  {% else %}
+                  <span class="badge badge-danger">Inactive</span>
+                  {% endif %}
+                </td>
+                <td class="user-email-verified">
+                  {% if user.email_verified %}
+                  <span class="badge badge-success">Verified</span>
+                  {% else %}
+                  <span class="badge badge-warning">Pending
+                    <button class="btn btn-xs btn-info ml-1 resend-verification" 
+                            data-user-id="{{ user.id }}"
+                            data-toggle="tooltip" 
+                            title="Resend verification email">
+                      <i class="fas fa-envelope"></i>
+                    </button>
+                  </span>
+                  {% endif %}
+                </td>
+                <td>{{ user.last_login|default:"Never" }}</td>
+                <td>
+                  <div class="btn-group">
+                    <button class="btn btn-sm btn-info edit-user" 
+                            data-user-id="{{ user.id }}"
+                            data-username="{{ user.username }}"
+                            data-email="{{ user.email }}"
+                            data-role="{{ user.role }}">
+                      <i class="fas fa-edit"></i>
+                    </button>
+                    {% if user.is_active %}
+                    <button class="btn btn-sm btn-warning deactivate-user" data-user-id="{{ user.id }}">
+                      <i class="fas fa-ban"></i>
+                    </button>
+                    {% else %}
+                    <button class="btn btn-sm btn-success activate-user" data-user-id="{{ user.id }}">
+                      <i class="fas fa-check"></i>
+                    </button>
+                    {% endif %}
+                  </div>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Add User Modal -->
+<div class="modal fade" id="addUserModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Add New User</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <form id="addUserForm">
+        {% csrf_token %}
+        <div class="modal-body">
+          <div class="alert alert-info">
+            <i class="fas fa-info-circle mr-1"></i>
+            A verification email will be sent to the user's email address.
+          </div>
+          <div class="form-group">
+            <label for="username">Username</label>
+            <input type="text" class="form-control" id="username" name="username" required>
+          </div>
+          <div class="form-group">
+            <label for="email">Email</label>
+            <input type="email" class="form-control" id="email" name="email" required>
+          </div>
+          <div class="form-group">
+            <label for="password">Password</label>
+            <input type="password" class="form-control" id="password" name="password" required>
+          </div>
+          <div class="form-group">
+            <label for="role">Role</label>
+            <select class="form-control" id="role" name="role" required>
+              <option value="ADMIN">Administrator</option>
+              <option value="MINER">Miner</option>
+              <option value="TECHNICAL">Technical Expert</option>
+            </select>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="addUserSubmit">
+            <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+            Add User
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Edit User Modal -->
+<div class="modal fade" id="editUserModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Edit User</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <form id="editUserForm">
+        {% csrf_token %}
+        <input type="hidden" id="editUserId" name="user_id">
+        <div class="modal-body">
+          <div class="form-group">
+            <label for="editUsername">Username</label>
+            <input type="text" class="form-control" id="editUsername" name="username" required>
+          </div>
+          <div class="form-group">
+            <label for="editEmail">Email</label>
+            <input type="email" class="form-control" id="editEmail" name="email" required>
+          </div>
+          <div class="form-group">
+            <label for="editRole">Role</label>
+            <select class="form-control" id="editRole" name="role" required>
+              <option value="ADMIN">Administrator</option>
+              <option value="MINER">Miner</option>
+              <option value="TECHNICAL">Technical Expert</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="editPassword">New Password (leave blank to keep current)</label>
+            <input type="password" class="form-control" id="editPassword" name="password">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="editUserSubmit">
+            <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+            Save Changes
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+
+{% block extra_js %}
+<!-- DataTables -->
+<script src="https://cdn.datatables.net/1.10.24/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.10.24/js/dataTables.bootstrap4.min.js"></script>
+<script src="https://cdn.datatables.net/responsive/2.2.9/js/dataTables.responsive.min.js"></script>
+<script src="https://cdn.datatables.net/responsive/2.2.9/js/responsive.bootstrap4.min.js"></script>
+<!-- Toastr -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/js/toastr.min.js"></script>
+
+<script>
+$(document).ready(function() {
+    // Initialize tooltips
+    $('[data-toggle="tooltip"]').tooltip();
+
+    // Initialize DataTable with responsive feature
+    const table = $('#usersTable').DataTable({
+        responsive: true,
+        scrollX: true,
+        scrollCollapse: true,
+        autoWidth: false,
+        columnDefs: [
+            { responsivePriority: 1, targets: [0, -1] }, // Username and Actions columns
+            { responsivePriority: 2, targets: [2, 3] },  // Role and Status columns
+            { responsivePriority: 3, targets: '_all' }   // All other columns
+        ],
+        lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "All"]],
+        dom: '<"row"<"col-sm-12 col-md-6"l><"col-sm-12 col-md-6"f>>' +
+             '<"row"<"col-sm-12"tr>>' +
+             '<"row"<"col-sm-12 col-md-5"i><"col-sm-12 col-md-7"p>>',
+    });
+
+    // Configure toastr
+    toastr.options = {
+        "closeButton": true,
+        "progressBar": true,
+        "positionClass": "toast-top-right",
+        "timeOut": "5000"
+    };
+
+    // Add User Form Submission
+    $('#addUserForm').on('submit', function(e) {
+        e.preventDefault();
+        const submitBtn = $('#addUserSubmit');
+        const spinner = submitBtn.find('.spinner-border');
+        
+        submitBtn.prop('disabled', true);
+        spinner.removeClass('d-none');
+
+        $.ajax({
+            url: '{% url "user_add" %}',
+            method: 'POST',
+            data: $(this).serialize(),
+            success: function(response) {
+                $('#addUserModal').modal('hide');
+                toastr.success(
+                    'Verification email has been sent to ' + $('#email').val(),
+                    'User added successfully'
+                );
+                location.reload();
+            },
+            error: function(xhr) {
+                toastr.error(xhr.responseJSON?.message || 'Error adding user');
+            },
+            complete: function() {
+                submitBtn.prop('disabled', false);
+                spinner.addClass('d-none');
+            }
+        });
+    });
+
+    // Edit User Button Click
+    $('.edit-user').click(function() {
+        const userId = $(this).data('user-id');
+        const username = $(this).data('username');
+        const email = $(this).data('email');
+        const role = $(this).data('role');
+
+        $('#editUserId').val(userId);
+        $('#editUsername').val(username);
+        $('#editEmail').val(email);
+        $('#editRole').val(role);
+        $('#editPassword').val('');
+        $('#editUserModal').modal('show');
+    });
+
+    // Edit User Form Submission
+    $('#editUserForm').on('submit', function(e) {
+        e.preventDefault();
+        const userId = $('#editUserId').val();
+        const submitBtn = $('#editUserSubmit');
+        const spinner = submitBtn.find('.spinner-border');
+        
+        submitBtn.prop('disabled', true);
+        spinner.removeClass('d-none');
+
+        $.ajax({
+            url: `/accounts/users/${userId}/edit/`,
+            method: 'POST',
+            data: $(this).serialize(),
+            success: function(response) {
+                $('#editUserModal').modal('hide');
+                
+                // Update the table row
+                const row = $(`#user-row-${userId}`);
+                row.find('.user-username').text($('#editUsername').val());
+                row.find('.user-email').text($('#editEmail').val());
+                row.find('.user-role span').text($('#editRole option:selected').text());
+                
+                toastr.success('User updated successfully');
+            },
+            error: function(xhr) {
+                toastr.error(xhr.responseJSON?.message || 'Error updating user');
+            },
+            complete: function() {
+                submitBtn.prop('disabled', false);
+                spinner.addClass('d-none');
+            }
+        });
+    });
+
+    // Resend Verification Email
+    $('.resend-verification').click(function() {
+        const userId = $(this).data('user-id');
+        $(this).prop('disabled', true);
+        
+        $.ajax({
+            url: `/accounts/users/${userId}/resend-verification/`,
+            method: 'POST',
+            data: {
+                csrfmiddlewaretoken: $('input[name=csrfmiddlewaretoken]').val()
+            },
+            success: function(response) {
+                toastr.success('Verification email sent successfully');
+            },
+            error: function(xhr) {
+                toastr.error(xhr.responseJSON?.message || 'Error sending verification email');
+            },
+            complete: function() {
+                $(this).prop('disabled', false);
+            }
+        });
+    });
+
+    // Activate/Deactivate User
+    $('.deactivate-user, .activate-user').click(function() {
+        const userId = $(this).data('user-id');
+        const action = $(this).hasClass('deactivate-user') ? 'deactivate' : 'activate';
+        
+        if (confirm(`Are you sure you want to ${action} this user?`)) {
+            $.ajax({
+                url: `/accounts/users/${userId}/${action}/`,
+                method: 'POST',
+                data: {
+                    csrfmiddlewaretoken: $('input[name=csrfmiddlewaretoken]').val()
+                },
+                success: function(response) {
+                    toastr.success(`User ${action}d successfully`);
+                    location.reload();
+                },
+                error: function(xhr) {
+                    toastr.error(xhr.responseJSON?.message || `Error ${action}ing user`);
+                }
+            });
+        }
+    });
+});
+</script>
+{% endblock %}

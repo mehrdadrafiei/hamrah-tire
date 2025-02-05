@@ -75,9 +75,9 @@ urlpatterns = [
     # Password Reset Routes
     path('accounts/password-reset/', account_views.password_reset_view, name='password_reset'),
     path('accounts/password-reset/sent/', account_views.password_reset_done_view, name='password_reset_done'),
-    path('accounts/password-reset/<str:token>/', account_views.password_reset_confirm_view, name='password_reset_confirm'),
+    path('accounts/password-reset/confirm/<str:token>/', account_views.password_reset_confirm_view, name='password_reset_confirm'),
     path('accounts/password-reset/complete/', account_views.password_reset_complete_view, name='password_reset_complete'),
-    
+
     # Tire Management
     path('tires/', tire_views.tire_list_view, name='tire_list'),
     path('tires/add/', tire_views.tire_add_view, name='tire_add'),
@@ -93,7 +93,16 @@ urlpatterns = [
     path('dashboard/admin/', dashboard_views.admin_dashboard, name='admin_dashboard'),
     path('dashboard/miner/', dashboard_views.miner_dashboard, name='miner_dashboard'),
     path('dashboard/technical/', dashboard_views.technical_dashboard, name='technical_dashboard'),
-    path('dashboard/', dashboard_views.dashboard_view, name='dashboard')
+    path('dashboard/', dashboard_views.dashboard_view, name='dashboard'),
+
+    path('accounts/users/', account_views.user_list_view, name='user_list'),
+    path('accounts/users/add/', account_views.user_add_view, name='user_add'),
+    path('accounts/users/<int:user_id>/edit/', account_views.user_edit_view, name='user_edit'),
+    path('accounts/users/<int:user_id>/activate/', account_views.user_activate_view, name='user_activate'),
+    path('accounts/users/<int:user_id>/deactivate/', account_views.user_deactivate_view, name='user_deactivate'),
+    path('accounts/users/<int:user_id>/resend-verification/', account_views.resend_verification_email_view, name='resend_verification'),
+path('accounts/verify-email/<str:token>/', account_views.verify_email_view, name='verify_email'),
+
 ]
 
 # Serve media files in development

@@ -19,6 +19,7 @@ from .serializers import (
     UserProfileUpdateSerializer
 )
 from .permissions import IsAdminOrSelf
+from apps.tire.api.views import CustomPageNumberPagination
 
 User = get_user_model()
 
@@ -81,7 +82,8 @@ class UserViewSet(viewsets.ModelViewSet):
     """
     queryset = User.objects.all()
     permission_classes = [IsAuthenticated, IsAdminOrSelf]
-    
+    pagination_class = CustomPageNumberPagination
+
     def get_serializer_class(self):
         if self.action == 'create':
             return UserCreateSerializer
