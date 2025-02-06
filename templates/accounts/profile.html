@@ -37,7 +37,7 @@
         </div>
         <!-- /.card -->
 
-        <!-- About Me Box -->
+        <!-- Quick Navigation -->
         <div class="card card-primary">
           <div class="card-header">
             <h3 class="card-title">Quick Navigation</h3>
@@ -260,21 +260,43 @@
 </section>
 {% endblock %}
 
+<style>
+  /* Custom styles for the active navigation item */
+  .nav-pills .nav-link.active {
+    background-color: #007bff; /* Primary blue */
+    color: #fff; /* White text */
+    border-radius: 4px; /* Rounded corners */
+  }
+
+  /* Hover effect for navigation items */
+  .nav-pills .nav-link:hover {
+    background-color: #e9ecef; /* Light gray on hover */
+    color: #007bff; /* Blue text on hover */
+  }
+
+  /* Remove the default blue background from the card header */
+  .card-primary .card-header {
+    background-color: #f8f9fa; /* Light gray background */
+    color: #007bff; /* Blue text */
+    border-bottom: 1px solid #dee2e6; /* Add a border for separation */
+  }
+</style>
 {% block extra_js %}
 <script>
 $(document).ready(function() {
     // Profile form submission
     $('#profileForm').on('submit', function(e) {
         e.preventDefault();
+        const form = $(this);
         $.ajax({
             url: '{% url "profile" %}',
             method: 'POST',
-            data: $(this).serialize(),
+            data: form.serialize(),
             success: function(response) {
-                showAlert('success', 'Profile updated successfully');
+                showAlert('success', 'Profile updated successfully', form.find('.card-body'));
             },
             error: function(xhr) {
-                showAlert('danger', 'Failed to update profile');
+                showAlert('danger', 'Failed to update profile', form.find('.card-body'));
             }
         });
     });
@@ -282,29 +304,31 @@ $(document).ready(function() {
     // Handle notifications form
     $('#notificationForm').on('submit', function(e) {
         e.preventDefault();
+        const form = $(this);
         $.ajax({
             url: '{% url "notifications" %}',
             method: 'POST',
-            data: $(this).serialize(),
+            data: form.serialize(),
             success: function(response) {
-                showAlert('success', 'Notification preferences updated');
+                showAlert('success', 'Notification preferences updated', form.find('.card-body'));
             },
             error: function(xhr) {
-                showAlert('danger', 'Failed to update preferences');
+                showAlert('danger', 'Failed to update preferences', form.find('.card-body'));
             }
         });
     });
 
-    // Show alert message
-    function showAlert(type, message) {
+    // Show alert message in a specific container
+    function showAlert(type, message, container) {
         const alert = `
             <div class="alert alert-${type} alert-dismissible">
                 <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
                 ${message}
             </div>
         `;
-        $('.alert').remove();
-        $('.card-body').prepend(alert);
+        // Remove existing alerts in the container and prepend new one
+        container.find('.alert').remove();
+        container.prepend(alert);
     }
 });
 </script>

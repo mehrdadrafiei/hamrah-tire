@@ -42,6 +42,15 @@
             </div>
         </div>
     </div>
+    <div class="col-12 col-sm-6 col-md-3">
+        <div class="info-box mb-3">
+            <span class="info-box-icon bg-purple elevation-1"><i class="fas fa-video"></i></span>
+            <div class="info-box-content">
+                <span class="info-box-text">Training Videos</span>
+                <span class="info-box-number">{{ total_trainings }}</span>
+            </div>
+        </div>
+    </div>
 </div>
 
 <!-- Main row -->
@@ -135,6 +144,59 @@
                 </table>
             </div>
         </div>
+
+        <!-- Training Requests Card -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <i class="fas fa-graduation-cap mr-1"></i>
+                    Recent Training Requests
+                </h3>
+                <div class="card-tools">
+                    <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                        <i class="fas fa-minus"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Requested By</th>
+                                <th>Title</th>
+                                <th>Category</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for request in training_requests %}
+                            <tr>
+                                <td>{{ request.user.username }}</td>
+                                <td>{{ request.title }}</td>
+                                <td>{{ request.category.name }}</td>
+                                <td>
+                                    <span class="badge badge-{{ request.status|lower }}">
+                                        {{ request.get_status_display }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <button class="btn btn-sm btn-info" onclick="viewTrainingRequest({{ request.id }})">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="5" class="text-center">No training requests</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
     </section>
 
     <!-- Right col -->
@@ -205,6 +267,9 @@
                     </button>
                     <button type="button" class="btn btn-info" onclick="window.location.href='{% url 'report_list' %}'">
                         <i class="fas fa-clipboard-check mr-2"></i>View Reports
+                    </button>
+                    <button type="button" class="btn btn-purple mb-2" onclick="window.location.href='{% url 'training_list' %}'">
+                        <i class="fas fa-video mr-2"></i>Manage Training
                     </button>
                 </div>
             </div>
@@ -308,7 +373,11 @@
 {% endblock %}
 
 {% block extra_js %}
+{{ block.super }}
 <script>
+function viewTrainingRequest(requestId) {
+    window.location.href = `/training/requests/${requestId}/`;
+}
 $(document).ready(function() {
     // Initialize DataTables
     $('.table').DataTable({

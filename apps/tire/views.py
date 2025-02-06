@@ -9,7 +9,8 @@ from apps.accounts.decorators import role_required
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.views.decorators.csrf import ensure_csrf_cookie
-
+from .models import Training, TrainingCategory, TrainingRequest
+from .forms import TrainingForm, TrainingCategoryForm
 from .forms import TireForm
 
 @login_required
@@ -173,3 +174,141 @@ def report_list_view(request):
         'title': 'Technical Reports'
     }
     return render(request, 'tire/report_list.html', context)
+
+# ------------------------------
+# ---- Training Admin Views ----
+# ------------------------------
+
+@login_required
+@role_required(['ADMIN'])
+def training_list_view(request):
+    trainings = Training.objects.select_related('category', 'uploaded_by').all()
+    context = {
+        'trainings': trainings,
+        'categories': TrainingCategory.objects.all()
+    }
+    return render(request, 'training/admin/training_list.html', context)
+
+@login_required
+@role_required(['ADMIN'])
+def training_add_view(request):
+    if request.method == 'POST':
+        form = TrainingForm(request.POST)
+        if form.is_valid():
+            training = form.save(commit=False)
+            training.uploaded_by = request.user
+            training.save()
+            messages.success(request, 'Training video added successfully.')
+            return redirect('training_list')
+    else:
+        form = TrainingForm()
+
+    return render(request, 'training/admin/training_form.html', {
+        'form': form,
+        'title': 'Add Training Video'
+    })
+
+@login_required
+@role_required(['ADMIN'])
+def training_edit_view(request, pk):
+    training = get_object_or_404(Training, pk=pk)
+    if request.method == 'POST':
+        form = TrainingForm(request.POST, instance=training)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Training video updated successfully.')
+            return redirect('training_list')
+    else:
+        form = TrainingForm(instance=training)
+
+    return render(request, 'training/admin/training_form.html', {
+        'form': form,
+        'training': training,
+        'title': 'Edit Training Video'
+    })
+
+@login_required
+@role_required(['ADMIN'])
+def training_delete_view(request, pk):
+    training = get_object_or_404(Training, pk=pk)
+    if request.method == 'POST':
+        training.delete()
+        messages.success(request, 'Training video deleted successfully.')
+        return redirect('training_list')
+    return redirect('training_list')
+
+@login_required
+@role_required(['ADMIN'])
+def training_category_list_view(request):
+    if request.method == 'POST':
+        form = TrainingCategoryForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Category added successfully.')
+            return redirect('training_category_list')
+    else:
+        form = TrainingCategoryForm()
+
+    categories = TrainingCategory.objects.all()
+    return render(request, 'training/admin/category_list.html', {
+        'categories': categories,
+        'form': form
+    })
+
+@login_required
+@role_required(['ADMIN'])
+def training_category_edit_view(request, pk):
+    category = get_object_or_404(TrainingCategory, pk=pk)
+    if request.method == 'POST':
+        form = TrainingCategoryForm(request.POST, instance=category)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Category updated successfully.')
+            return redirect('training_category_list')
+    else:
+        form = TrainingCategoryForm(instance=category)
+
+    return render(request, 'training/admin/category_form.html', {
+        'form': form,
+        'category': category
+    })
+
+@login_required
+@role_required(['ADMIN'])
+def training_category_delete_view(request, pk):
+    category = get_object_or_404(TrainingCategory, pk=pk)
+    if request.method == 'POST':
+        category.delete()
+        messages.success(request, 'Category deleted successfully.')
+        return redirect('training_category_list')
+    return redirect('training_category_list')
+
+@login_required
+@role_required(['ADMIN'])
+def training_request_list_view(request):
+    requests = TrainingRequest.objects.select_related('user', 'category').all()
+    return render(request, 'training/admin/request_list.html', {
+        'requests': requests
+    })
+
+@login_required
+@role_required(['ADMIN'])
+def training_request_update_view(request, pk):
+    training_request = get_object_or_404(TrainingRequest, pk=pk)
+    if request.method == 'POST':
+        status = request.POST.get('status')
+        notes = request.POST.get('notes', '')
+        
+        if status in dict(TrainingRequest.STATUS_CHOICES):
+            training_request.status = status
+            training_request.notes = notes
+            if status in ['APPROVED', 'REJECTED']:
+                training_request.approved_by = request.user
+                training_request.approved_at = timezone.now()
+            training_request.save()
+            
+            messages.success(request, f'Request status updated to {status}')
+        else:
+            messages.error(request, 'Invalid status')
+            
+    return redirect('training_request_list')
