@@ -26,9 +26,12 @@ class Command(BaseCommand):
                 'tires.json',
                 'warranties.json',
                 'repair_requests.json',
-                'technical_reports.json'
+                'technical_reports.json',
+                'training_categories.json',
+                'trainings.json',
+                'training_requests.json'
             ]
-            
+
             for fixture in fixtures:
                 try:
                     self.stdout.write(f'Loading fixture: {fixture}')

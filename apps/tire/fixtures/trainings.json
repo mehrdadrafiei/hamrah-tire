@@ -1,0 +1,34 @@
+[
+    {
+        "model": "tire.training",
+        "pk": 1,
+        "fields": {
+            "title": "Basic Tire Maintenance",
+            "description": "Learn the basics of tire maintenance",
+            "video_url": "https://www.aparat.com//video1.mp4",
+            "thumbnail_url": "https://www.aparat.com//thumbnail1.jpg",
+            "category": 1,
+            "uploaded_by": 1,
+            "created_at": "2023-06-01T10:00:00Z",
+            "updated_at": "2023-06-01T10:00:00Z",
+            "is_active": true,
+            "view_count": 0
+        }
+    },
+    {
+        "model": "tire.training",
+        "pk": 2,
+        "fields": {
+            "title": "Tire Safety Essentials",
+            "description": "Essential safety procedures for tire handling",
+            "video_url": "https://www.aparat.com//video2.mp4",
+            "thumbnail_url": "https://www.aparat.com//thumbnail2.jpg",
+            "category": 2,
+            "uploaded_by": 1,
+            "created_at": "2023-06-02T11:00:00Z",
+            "updated_at": "2023-06-02T11:00:00Z",
+            "is_active": false,
+            "view_count": 0
+        }
+    }
+]

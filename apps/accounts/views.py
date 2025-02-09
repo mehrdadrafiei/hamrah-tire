@@ -35,18 +35,18 @@ def login_view(request):
     """Handle user login with template."""
     if request.user.is_authenticated:
         return redirect_to_dashboard(request.user)
-    
+
     if request.method == 'POST':
         form = UserLoginForm(request.POST)
         if form.is_valid():
             user = form.get_user()
             login(request, user)
-            
+
             # Generate JWT tokens
             refresh = RefreshToken.for_user(user)
-            
+
             response = redirect_to_dashboard(user)
-            
+
             # Set both cookies and localStorage
             response.set_cookie(
                 'access_token',
@@ -62,20 +62,20 @@ def login_view(request):
                 secure=True,
                 samesite='Lax'
             )
-            
+
             # Add JavaScript to set localStorage items
             response.write('<script>')
             response.write(f'localStorage.setItem("access_token", "{str(refresh.access_token)}");')
             response.write(f'localStorage.setItem("user_role", "{user.role}");')
             response.write('</script>')
-            
+
             if not form.cleaned_data.get('remember_me', False):
                 request.session.set_expiry(0)
-            
+
             return response
     else:
         form = UserLoginForm()
-    
+
     return render(request, 'accounts/login.html', {'form': form})
 
 def redirect_to_dashboard(user):
@@ -107,7 +107,7 @@ def profile_view(request):
             messages.error(request, 'Error updating profile.')
     else:
         form = UserProfileForm(instance=request.user)
-    
+
     return render(request, 'accounts/profile.html', {'form': form})
 
 @login_required
@@ -123,19 +123,19 @@ def change_password_view(request):
             messages.error(request, 'Please correct the errors below.')
     else:
         form = CustomPasswordChangeForm(user=request.user)
-    
+
     return render(request, 'accounts/change_password.html', {'form': form})
 
 
 def get_recent_activities():
     """Get combined recent activities from different models."""
     activities = []
-    
+
     # Add repair requests
     repair_requests = RepairRequest.objects.select_related(
         'tire', 'requested_by'
     ).order_by('-request_date')[:5]
-    
+
     for request in repair_requests:
         activities.append({
             'timestamp': request.request_date,
@@ -143,12 +143,12 @@ def get_recent_activities():
             'action': 'Repair Request',
             'details': f'Tire: {request.tire.serial_number}'
         })
-    
+
     # Add technical reports
     reports = TechnicalReport.objects.select_related(
         'tire', 'expert'
     ).order_by('-inspection_date')[:5]
-    
+
     for report in reports:
         activities.append({
             'timestamp': report.inspection_date,
@@ -156,13 +156,13 @@ def get_recent_activities():
             'action': 'Technical Inspection',
             'details': f'Tire: {report.tire.serial_number}'
         })
-    
+
     return sorted(activities, key=lambda x: x['timestamp'], reverse=True)
 
 def get_system_alerts():
     """Get system alerts for admin dashboard."""
     alerts = []
-    
+
     # Check for low tread depth
     critical_tires = Tire.objects.filter(tread_depth__lt=2.0)
     if critical_tires.exists():
@@ -170,11 +170,11 @@ def get_system_alerts():
             'level': 'danger',
             'message': f'{critical_tires.count()} tires have critically low tread depth'
         })
-    
+
     # Check for overdue inspections
     thirty_days_ago = timezone.now() - timezone.timedelta(days=30)
     overdue_tires = Tire.objects.filter(
-        Q(technicalreport__isnull=True) | 
+        Q(technicalreport__isnull=True) |
         Q(technicalreport__inspection_date__lt=thirty_days_ago)
     ).distinct()
     if overdue_tires.exists():
@@ -182,7 +182,7 @@ def get_system_alerts():
             'level': 'warning',
             'message': f'{overdue_tires.count()} tires are due for inspection'
         })
-    
+
     return alerts
 
 def get_inspection_status(tires):
@@ -192,10 +192,10 @@ def get_inspection_status(tires):
         technicalreport__inspection_date__gte=thirty_days_ago
     ).distinct().count()
     total = tires.count()
-    
+
     if total == 0:
         return "No tires assigned"
-    
+
     percentage = (recent_inspections / total) * 100
     return f"{percentage:.1f}% up to date"
 
@@ -219,7 +219,7 @@ def password_reset_view(request):
                 form.add_error(None, str(e))
     else:
         form = PasswordResetRequestForm()
-    
+
     return render(request, 'accounts/password_reset_form.html', {'form': form})
 
 def password_reset_done_view(request):
@@ -238,7 +238,7 @@ def password_reset_confirm_view(request, token):
                 form.add_error(None, str(e))
     else:
         form = PasswordResetConfirmForm()
-    
+
     return render(request, 'accounts/password_reset_confirm.html', {
         'form': form,
         'token': token
@@ -268,7 +268,7 @@ def send_verification_email(user):
     token = user.generate_verification_token()
     # Change this line to match your URL pattern
     verification_url = f"{settings.FRONTEND_URL}/accounts/verify-email/{token}/"
-    
+
     # Rest of the function remains the same
     context = {
         'username': user.username,
@@ -276,7 +276,7 @@ def send_verification_email(user):
     }
     html_message = render_to_string('accounts/email/verify_email.html', context)
     plain_message = strip_tags(html_message)
-    
+
     try:
         send_mail(
             subject='Verify Your Email - Hamrah Tire',
@@ -304,7 +304,7 @@ def verify_email_view(request, token):
     except User.DoesNotExist:
         messages.error(request, 'Invalid verification link.')
         return redirect('login')
-    
+
 @role_required(['ADMIN'])
 def user_list_view(request):
     """View for listing and managing users."""
@@ -326,7 +326,7 @@ def user_add_view(request):
                 password=request.POST['password'],
                 role=request.POST['role']
             )
-            
+
             # Send verification email
             if send_verification_email(user):
                 return JsonResponse({
@@ -340,11 +340,11 @@ def user_add_view(request):
                 })
         except Exception as e:
             return JsonResponse({
-                'status': 'error', 
+                'status': 'error',
                 'message': str(e)
             }, status=400)
     return JsonResponse({
-        'status': 'error', 
+        'status': 'error',
         'message': 'Invalid request'
     }, status=405)
 
@@ -355,23 +355,23 @@ def user_edit_view(request, user_id):
         try:
             user = get_object_or_404(User, id=user_id)
             old_email = user.email
-            
+
             user.username = request.POST['username']
             user.email = request.POST['email']
             user.role = request.POST['role']
-            
+
             # Only update password if provided
             new_password = request.POST.get('password')
             if new_password:
                 user.set_password(new_password)
-            
+
             # Check if email changed
             email_changed = old_email != user.email
             if email_changed:
                 user.email_verified = False
-            
+
             user.save()
-            
+
             # Send new verification email if email changed
             if email_changed:
                 if send_verification_email(user):
@@ -384,20 +384,20 @@ def user_edit_view(request, user_id):
                         'status': 'warning',
                         'message': 'User updated but failed to send verification email.'
                     })
-            
+
             return JsonResponse({
                 'status': 'success',
                 'message': 'User updated successfully'
             })
-            
+
         except Exception as e:
             return JsonResponse({
-                'status': 'error', 
+                'status': 'error',
                 'message': str(e)
             }, status=400)
-            
+
     return JsonResponse({
-        'status': 'error', 
+        'status': 'error',
         'message': 'Invalid request'
     }, status=405)
 
@@ -415,11 +415,11 @@ def user_activate_view(request, user_id):
             })
         except Exception as e:
             return JsonResponse({
-                'status': 'error', 
+                'status': 'error',
                 'message': str(e)
             }, status=400)
     return JsonResponse({
-        'status': 'error', 
+        'status': 'error',
         'message': 'Invalid request'
     }, status=405)
 
@@ -435,7 +435,7 @@ def user_deactivate_view(request, user_id):
                     'status': 'error',
                     'message': 'Cannot deactivate the last admin user'
                 }, status=400)
-            
+
             user.is_active = False
             user.save()
             return JsonResponse({
@@ -444,11 +444,11 @@ def user_deactivate_view(request, user_id):
             })
         except Exception as e:
             return JsonResponse({
-                'status': 'error', 
+                'status': 'error',
                 'message': str(e)
             }, status=400)
     return JsonResponse({
-        'status': 'error', 
+        'status': 'error',
         'message': 'Invalid request'
     }, status=405)
 
@@ -463,7 +463,7 @@ def resend_verification_email_view(request, user_id):
                     'status': 'error',
                     'message': 'User email is already verified'
                 }, status=400)
-            
+
             if send_verification_email(user):
                 return JsonResponse({
                     'status': 'success',
@@ -474,13 +474,13 @@ def resend_verification_email_view(request, user_id):
                     'status': 'error',
                     'message': 'Failed to send verification email'
                 }, status=500)
-                
+
         except Exception as e:
             return JsonResponse({
-                'status': 'error', 
+                'status': 'error',
                 'message': str(e)
             }, status=400)
     return JsonResponse({
-        'status': 'error', 
+        'status': 'error',
         'message': 'Invalid request'
-    }, status=405)
+    }, status=405)@login_required

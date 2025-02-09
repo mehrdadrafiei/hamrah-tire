@@ -1,0 +1,22 @@
+[
+    {
+        "model": "tire.trainingcategory",
+        "pk": 1,
+        "fields": {
+            "name": "Tire Maintenance",
+            "description": "Videos about proper tire maintenance",
+            "created_at": "2024-06-04T10:00:00Z",
+            "updated_at": "2024-06-04T10:30:00Z"
+        }
+    },
+    {
+        "model": "tire.trainingcategory",
+        "pk": 2,
+        "fields": {
+            "name": "Safety Procedures",
+            "description": "Videos covering safety procedures for tire handling",
+            "created_at": "2024-06-04T10:00:00Z",
+            "updated_at": "2024-06-04T10:30:00Z"
+        }
+    }
+]

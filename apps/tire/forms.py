@@ -6,8 +6,8 @@ from django import forms
 class TireForm(forms.ModelForm):
     class Meta:
         model = Tire
-        fields = ['title', 'serial_number', 'brand', 'model', 'compound', 
-                 'pattern', 'size', 'category', 'working_hours', 'status', 
+        fields = ['title', 'serial_number', 'brand', 'model', 'compound',
+                 'pattern', 'size', 'category', 'working_hours', 'status',
                  'owner', 'purchase_date', 'tread_depth']  # Added tread_depth
         widgets = {
             'title': forms.TextInput(attrs={'class': 'form-control'}),
@@ -43,6 +43,18 @@ class TrainingCategoryForm(forms.ModelForm):
         }
 
 class TrainingForm(forms.ModelForm):
+    STATUS_CHOICES = [
+        (True, 'Active'),
+        (False, 'Inactive')
+    ]
+
+    is_active = forms.ChoiceField(
+        choices=STATUS_CHOICES,
+        label="Status",
+        initial=True,
+        widget=forms.Select(attrs={'class': 'form-control'})
+    )
+
     def clean_video_url(self):
         url = self.cleaned_data.get('video_url')
         if not url.startswith('https://www.aparat.com/'):
@@ -51,7 +63,7 @@ class TrainingForm(forms.ModelForm):
 
     class Meta:
         model = Training
-        fields = ['title', 'description', 'category', 'video_url', 'thumbnail_url']
+        fields = ['title', 'description', 'category', 'video_url', 'thumbnail_url', 'is_active']
         widgets = {
             'title': forms.TextInput(attrs={'class': 'form-control'}),
             'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),

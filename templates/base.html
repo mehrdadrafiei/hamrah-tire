@@ -174,7 +174,7 @@
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a href="{% url 'training_requests' %}" class="nav-link {% if request.resolver_match.url_name == 'training_requests' %}active{% endif %}">
+                                <a href="{% url 'training_request_list' %}" class="nav-link {% if request.resolver_match.url_name == 'training_request_list' %}active{% endif %}">
                                     <i class="far fa-circle nav-icon"></i>
                                     <p>Requests</p>
                                 </a>
@@ -252,7 +252,7 @@ $(document).ready(function() {
             }
         });
     });
-    
+
 });
 </script>
 

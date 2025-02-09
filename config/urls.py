@@ -57,10 +57,10 @@ api_patterns = [
 urlpatterns = [
     # Admin interface
     path('admin/', admin.site.urls),
-    
+
     # API endpoints (with namespace)
     path('api/', include((api_patterns, 'api'), namespace='api')),
-    
+
     # Frontend/Authentication routes
     path('', dashboard_views.dashboard_view, name='dashboard'),
     path('accounts/login/', account_views.login_view, name='login'),
@@ -71,7 +71,7 @@ urlpatterns = [
     path('accounts/profile/', account_views.profile_view, name='profile'),
     path('accounts/notifications/', account_views.notifications_view, name='notifications'),
     path('accounts/messages/', account_views.messages_view, name='messages'),
-    
+
     # Password Reset Routes
     path('accounts/password-reset/', account_views.password_reset_view, name='password_reset'),
     path('accounts/password-reset/sent/', account_views.password_reset_done_view, name='password_reset_done'),
@@ -108,15 +108,16 @@ urlpatterns = [
     path('training/add/', tire_views.training_add_view, name='training_add'),
     path('training/<int:pk>/edit/', tire_views.training_edit_view, name='training_edit'),
     path('training/<int:pk>/delete/', tire_views.training_delete_view, name='training_delete'),
-    
+
     # Training Category URLs
     path('training/categories/', tire_views.training_category_list_view, name='training_category_list'),
     path('training/categories/<int:pk>/edit/', tire_views.training_category_edit_view, name='training_category_edit'),
     path('training/categories/<int:pk>/delete/', tire_views.training_category_delete_view, name='training_category_delete'),
-    
+
     # Training Request URLs
-    path('training/requests/', tire_views.training_request_list_view, name='training_requests'),
-    path('training/requests/<int:pk>/', tire_views.training_request_update_view, name='training_request_update'),
+    path('training/requests/', tire_views.training_request_list_view, name='training_request_list'),
+    path('training/requests/<int:pk>/update/', tire_views.training_request_update_view, name='training_request_update'),
+
 ]
 
 # Serve media files in development

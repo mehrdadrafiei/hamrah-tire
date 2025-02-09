@@ -14,7 +14,7 @@ class TireCategory(models.Model):
 
     def __str__(self):
         return self.name
-    
+
 class Tire(models.Model):
     STATUS_CHOICES = (
         ('ORDERED', 'Ordered'),
@@ -51,7 +51,7 @@ class Warranty(models.Model):
     is_active = models.BooleanField(default=False)
     activation_date = models.DateField(null=True, blank=True)
     approved_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='approved_warranties')
-    
+
     class Meta:
         db_table = 'warranties'
 
@@ -63,7 +63,7 @@ class RepairRequest(models.Model):
         ('COMPLETED', 'Completed'),
         ('REJECTED', 'Rejected'),
     )
-    
+
     tire = models.ForeignKey(Tire, on_delete=models.CASCADE)
     requested_by = models.ForeignKey(User, on_delete=models.CASCADE)
     request_date = models.DateTimeField(auto_now_add=True)
@@ -71,7 +71,7 @@ class RepairRequest(models.Model):
     status = models.CharField(max_length=20, choices=STATUS_CHOICES)
     approved_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='approved_repairs')
     completion_date = models.DateTimeField(null=True, blank=True)
-    
+
     class Meta:
         db_table = 'repair_requests'
 
@@ -85,7 +85,7 @@ class TechnicalReport(models.Model):
     notes = models.TextField()
     requires_immediate_attention = models.BooleanField(default=False)
     resolved = models.BooleanField(default=False)  # Add this field
-    
+
     class Meta:
         db_table = 'technical_reports'
 
@@ -142,10 +142,10 @@ class TrainingRequest(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     approved_by = models.ForeignKey(
-        User, 
-        on_delete=models.SET_NULL, 
-        null=True, 
-        blank=True, 
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
         related_name='approved_training_requests'
     )
     approved_at = models.DateTimeField(null=True, blank=True)
@@ -163,7 +163,7 @@ class TireSize(models.Model):
     aspect_ratio = models.IntegerField()
     diameter = models.IntegerField()
     standard_description = models.CharField(max_length=50)
-    
+
     class Meta:
         db_table = 'tire_sizes'
         unique_together = ('width', 'aspect_ratio', 'diameter')
@@ -174,14 +174,14 @@ class Alert(models.Model):
         ('TREAD_DEPTH', 'Low Tread Depth'),
         ('WARRANTY_EXPIRY', 'Warranty Near Expiration'),
     )
-    
+
     tire = models.ForeignKey(Tire, on_delete=models.CASCADE)
     alert_type = models.CharField(max_length=20, choices=ALERT_TYPES)
     created_date = models.DateTimeField(auto_now_add=True)
     resolved_date = models.DateTimeField(null=True, blank=True)
     resolved_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
     is_active = models.BooleanField(default=True)
-    
+
     class Meta:
         db_table = 'alerts'
 

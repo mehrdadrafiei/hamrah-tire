@@ -13,7 +13,7 @@
                 <div class="card-body">
                     <form method="post">
                         {% csrf_token %}
-                        
+
                         {% if form.non_field_errors %}
                         <div class="alert alert-danger">
                             {{ form.non_field_errors }}
@@ -61,16 +61,15 @@
                             {% endif %}
                         </div>
 
-                        {% if form.instance.pk %}
                         <div class="mb-3">
-                            <div class="form-check">
-                                {{ form.is_active }}
-                                <label class="form-check-label" for="{{ form.is_active.id_for_label }}">
-                                    Active
-                                </label>
+                            <label class="form-label">Status</label>
+                            {{ form.is_active }}
+                            {% if form.is_active.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.is_active.errors }}
                             </div>
+                            {% endif %}
                         </div>
-                        {% endif %}
 
                         <div class="mt-4">
                             <button type="submit" class="btn btn-primary">{{ form.instance.pk|yesno:"Save Changes,Add Video" }}</button>

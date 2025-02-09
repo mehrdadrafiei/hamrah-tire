@@ -77,7 +77,7 @@ def tire_categories_view(request):
             )
             messages.success(request, 'Category added successfully.')
         return redirect('tire_categories')
-        
+
     categories = TireCategory.objects.all().order_by('name')
     return render(request, 'tire/categories.html', {
         'categories': categories,
@@ -100,7 +100,7 @@ def tire_add_view(request):
             return redirect('tire_list')
     else:
         form = TireForm(initial={'purchase_date': timezone.now().date()})  # Set default date
-    
+
     return render(request, 'tire/tire_form.html', {
         'form': form,
         'title': 'Add New Tire',
@@ -124,7 +124,7 @@ def tire_edit_view(request, pk):
             messages.error(request, 'Please correct the errors below.')
     else:
         form = TireForm(instance=tire)
-    
+
     return render(request, 'tire/tire_form.html', {
         'form': form,
         'tire': tire,
@@ -145,7 +145,7 @@ def tire_delete_view(request, pk):
             return JsonResponse({'success': True})
         except Exception as e:
             return JsonResponse({
-                'success': False, 
+                'success': False,
                 'error': 'Unable to delete tire. It may be referenced by other items.'
             }, status=400)
     return JsonResponse({'success': False, 'error': 'Invalid request'}, status=405)
@@ -167,7 +167,7 @@ def category_delete_view(request, pk):
 def report_list_view(request):
     """View for listing all technical reports."""
     reports = TechnicalReport.objects.select_related('tire', 'expert').order_by('-inspection_date')
-    
+
     context = {
         'reports': reports,
         'tires': Tire.objects.all(),
@@ -199,6 +199,8 @@ def training_add_view(request):
         form = TrainingForm(request.POST)
         if form.is_valid():
             training = form.save(commit=False)
+            training.is_active = form.cleaned_data['is_active'] == 'True'
+            training.uploaded_by = request.user
             training.uploaded_by = request.user
             training.save()
             messages.success(request, 'Training video added successfully.')
@@ -207,7 +209,7 @@ def training_add_view(request):
             messages.error(request, 'Please correct the errors below.')
     else:
         form = TrainingForm()
-    
+
     context = {
         'form': form,
         'title': 'Add Training Video'
@@ -218,18 +220,20 @@ def training_add_view(request):
 @role_required(['ADMIN'])
 def training_edit_view(request, pk):
     training = get_object_or_404(Training, pk=pk)
-    
+
     if request.method == 'POST':
         form = TrainingForm(request.POST, instance=training)
         if form.is_valid():
-            form.save()
+            training = form.save(commit=False)
+            training.is_active = form.cleaned_data['is_active'] == 'True'
+            training.save()
             messages.success(request, 'Training video updated successfully.')
             return redirect('training_list')
         else:
             messages.error(request, 'Please correct the errors below.')
     else:
         form = TrainingForm(instance=training)
-    
+
     context = {
         'form': form,
         'training': training,
@@ -308,7 +312,7 @@ def training_request_update_view(request, pk):
     if request.method == 'POST':
         status = request.POST.get('status')
         notes = request.POST.get('notes', '')
-        
+
         if status in dict(TrainingRequest.STATUS_CHOICES):
             training_request.status = status
             training_request.notes = notes
@@ -316,9 +320,9 @@ def training_request_update_view(request, pk):
                 training_request.approved_by = request.user
                 training_request.approved_at = timezone.now()
             training_request.save()
-            
+
             messages.success(request, f'Request status updated to {status}')
         else:
             messages.error(request, 'Invalid status')
-            
+
     return redirect('training_request_list')
