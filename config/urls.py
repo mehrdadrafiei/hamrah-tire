@@ -101,8 +101,22 @@ urlpatterns = [
     path('accounts/users/<int:user_id>/activate/', account_views.user_activate_view, name='user_activate'),
     path('accounts/users/<int:user_id>/deactivate/', account_views.user_deactivate_view, name='user_deactivate'),
     path('accounts/users/<int:user_id>/resend-verification/', account_views.resend_verification_email_view, name='resend_verification'),
-path('accounts/verify-email/<str:token>/', account_views.verify_email_view, name='verify_email'),
+    path('accounts/verify-email/<str:token>/', account_views.verify_email_view, name='verify_email'),
 
+    # Training URLs
+    path('training/', tire_views.training_list_view, name='training_list'),
+    path('training/add/', tire_views.training_add_view, name='training_add'),
+    path('training/<int:pk>/edit/', tire_views.training_edit_view, name='training_edit'),
+    path('training/<int:pk>/delete/', tire_views.training_delete_view, name='training_delete'),
+    
+    # Training Category URLs
+    path('training/categories/', tire_views.training_category_list_view, name='training_category_list'),
+    path('training/categories/<int:pk>/edit/', tire_views.training_category_edit_view, name='training_category_edit'),
+    path('training/categories/<int:pk>/delete/', tire_views.training_category_delete_view, name='training_category_delete'),
+    
+    # Training Request URLs
+    path('training/requests/', tire_views.training_request_list_view, name='training_requests'),
+    path('training/requests/<int:pk>/', tire_views.training_request_update_view, name='training_request_update'),
 ]
 
 # Serve media files in development

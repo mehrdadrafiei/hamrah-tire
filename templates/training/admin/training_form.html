@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} - Hamrah Tire{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title">{{ title }}</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        {% if form.non_field_errors %}
+                        <div class="alert alert-danger">
+                            {{ form.non_field_errors }}
+                        </div>
+                        {% endif %}
+
+                        <div class="mb-3">
+                            <label class="form-label">Title</label>
+                            {{ form.title }}
+                            {% if form.title.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.title.errors }}
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Category</label>
+                            {{ form.category }}
+                            {% if form.category.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.category.errors }}
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Video URL (Aparat)</label>
+                            {{ form.video_url }}
+                            {% if form.video_url.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.video_url.errors }}
+                            </div>
+                            {% endif %}
+                            <small class="form-text text-muted">Enter Aparat.com video URL</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Description</label>
+                            {{ form.description }}
+                            {% if form.description.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.description.errors }}
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        {% if form.instance.pk %}
+                        <div class="mb-3">
+                            <div class="form-check">
+                                {{ form.is_active }}
+                                <label class="form-check-label" for="{{ form.is_active.id_for_label }}">
+                                    Active
+                                </label>
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <div class="mt-4">
+                            <button type="submit" class="btn btn-primary">{{ form.instance.pk|yesno:"Save Changes,Add Video" }}</button>
+                            <a href="{% url 'training_list' %}" class="btn btn-secondary">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

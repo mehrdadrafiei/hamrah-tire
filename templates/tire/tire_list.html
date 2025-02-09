@@ -2,108 +2,139 @@
 
 {% block title %}Tires - Hamrah Tire{% endblock %}
 
-{% block content %}
-{% csrf_token %}
-
-<div class="container-fluid">
-    <!-- Page Header -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1 class="h3">Tire Management</h1>
-        {% if user.role == 'ADMIN' %}
-        <a href="{% url 'tire_add' %}" class="btn btn-primary">
-            <i class="fas fa-plus me-2"></i>Add New Tire
-        </a>
-        {% endif %}
-    </div>
-
-    <!-- Filters -->
-    <div class="card mb-4">
-        <div class="card-body">
-            <form id="filterForm" class="row g-3">
-                {% csrf_token %}
-                <div class="col-md-2">
-                    <label class="form-label">Brand</label>
-                    <input type="text" class="form-control" name="brand">
-                </div>
-                <div class="col-md-2">
-                    <label class="form-label">Model</label>
-                    <input type="text" class="form-control" name="model">
-                </div>
-                <div class="col-md-2">
-                    <label class="form-label">Status</label>
-                    <select class="form-select" name="status">
-                        <option value="">All</option>
-                        {% for status in status_choices %}
-                            <option value="{{ status.0 }}">{{ status.1 }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-                <div class="col-md-2">
-                    <label class="form-label">Category</label>
-                    <select class="form-select" name="category">
-                        <option value="">All</option>
-                        {% for category in categories %}
-                            <option value="{{ category.id }}">{{ category.name }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-                <div class="col-md-4 d-flex align-items-end">
-                    <button type="submit" class="btn btn-primary me-2">
-                        <i class="fas fa-filter me-2"></i>Apply Filters
-                    </button>
-                    <button type="button" class="btn btn-secondary" id="clearFilters">
-                        <i class="fas fa-times me-2"></i>Clear Filters
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Tires Table -->
-    <div class="card">
-        <div class="card-body">
-            <div class="table-responsive">
-                <table class="table table-hover" id="tiresTable">
-                    <thead>
-                        <tr>
-                            <th>Title</th>
-                            <th>Serial Number</th>
-                            <th>Brand</th>
-                            <th>Model</th>
-                            <th>Compound</th>
-                            <th>Pattern</th>
-                            <th>Size</th>
-                            <th>Category</th>
-                            <th>Working Hours</th>
-                            <th>Status</th>
-                            <th>Owner</th>
-                            {% if user.role == 'ADMIN' %}
-                            <th>Actions</th>
-                            {% endif %}
-                        </tr>
-                    </thead>
-                    <tbody></tbody>
-                </table>
+{% block content_header %}
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0">Tire Management</h1>
             </div>
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block content %}
+<section class="content">
+    <div class="container-fluid">
+        <!-- Filters Card -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <i class="fas fa-filter mr-1"></i>
+                    Filters
+                </h3>
+                <div class="card-tools">
+                    {% if user.role == 'ADMIN' %}
+                    <a href="{% url 'tire_add' %}" class="btn btn-primary btn-sm">
+                        <i class="fas fa-plus mr-1"></i>Add New Tire
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="card-body">
+                <form id="filterForm" class="row">
+                    {% csrf_token %}
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label>Brand</label>
+                            <input type="text" class="form-control" name="brand">
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label>Model</label>
+                            <input type="text" class="form-control" name="model">
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label>Status</label>
+                            <select class="form-control" name="status">
+                                <option value="">All</option>
+                                {% for status in status_choices %}
+                                    <option value="{{ status.0 }}">{{ status.1 }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label>Category</label>
+                            <select class="form-control" name="category">
+                                <option value="">All</option>
+                                {% for category in categories %}
+                                    <option value="{{ category.id }}">{{ category.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-12">
+                        <button type="submit" class="btn btn-primary mr-2">
+                            <i class="fas fa-filter mr-1"></i>Apply Filters
+                        </button>
+                        <button type="button" class="btn btn-default" id="clearFilters">
+                            <i class="fas fa-times mr-1"></i>Clear Filters
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Tires Table Card -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <i class="fas fa-tire mr-1"></i>
+                    Tire List
+                </h3>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered table-hover" id="tiresTable">
+                        <thead>
+                            <tr>
+                                <th>Title</th>
+                                <th>Serial Number</th>
+                                <th>Brand</th>
+                                <th>Model</th>
+                                <th>Compound</th>
+                                <th>Pattern</th>
+                                <th>Size</th>
+                                <th>Category</th>
+                                <th>Working Hours</th>
+                                <th>Status</th>
+                                <th>Owner</th>
+                                {% if user.role == 'ADMIN' %}
+                                <th>Actions</th>
+                                {% endif %}
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
 
 {% if user.role == 'ADMIN' %}
-<!-- Delete Confirmation Modal -->
-<div class="modal fade" id="deleteTireModal" tabindex="-1">
+<!-- Delete Modal -->
+<div class="modal fade" id="deleteTireModal">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Delete Tire</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <h4 class="modal-title">Delete Tire</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
             </div>
             <div class="modal-body">
                 <p>Are you sure you want to delete the tire "<span id="tireToDelete"></span>"?</p>
                 <p class="text-danger">This action cannot be undone.</p>
             </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            <div class="modal-footer justify-content-between">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
                 <button type="button" class="btn btn-danger" id="confirmDelete">Delete</button>
             </div>
         </div>
@@ -111,7 +142,21 @@
 </div>
 {% endif %}
 {% endblock %}
+
+{% block extra_css %}
+<!-- DataTables -->
+<link rel="stylesheet" href="https://cdn.datatables.net/1.10.24/css/dataTables.bootstrap4.min.css">
+<link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.2.9/css/responsive.bootstrap4.min.css">
+{% endblock %}
+
 {% block extra_js %}
+<!-- DataTables -->
+<script src="https://cdn.datatables.net/1.10.24/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.10.24/js/dataTables.bootstrap4.min.js"></script>
+<script src="https://cdn.datatables.net/responsive/2.2.9/js/dataTables.responsive.min.js"></script>
+<script src="https://cdn.datatables.net/responsive/2.2.9/js/responsive.bootstrap4.min.js"></script>
+
+<!-- Keep your existing script, but update the modal related code -->
 <script>
 $(document).ready(function() {
     const isAdmin = '{{ user.role }}' === 'ADMIN';
@@ -356,6 +401,28 @@ $(document).ready(function() {
     } catch (error) {
         console.error('DataTable initialization error:', error);
     }
+
+    // Update modal related code
+    $(document).on('click', '.delete-tire', function() {
+        const tireId = $(this).data('tire-id');
+        const tireTitle = $(this).data('tire-title');
+        $('#tireToDelete').text(tireTitle);
+        
+        $('#confirmDelete').off('click').on('click', function() {
+            $.ajax({
+                url: `/api/tires/${tireId}/`,
+                method: 'DELETE',
+                success: function() {
+                    $('#deleteTireModal').modal('hide');
+                    table.ajax.reload();
+                    toastr.success('Tire deleted successfully');
+                },
+                error: function() {
+                    toastr.error('Failed to delete tire');
+                }
+            });
+        });
+    });
 });
 </script>
 {% endblock %}

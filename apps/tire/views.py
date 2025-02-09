@@ -183,8 +183,11 @@ def report_list_view(request):
 @role_required(['ADMIN'])
 def training_list_view(request):
     trainings = Training.objects.select_related('category', 'uploaded_by').all()
+    form = TrainingForm()  # Add this line to provide form for modal
+
     context = {
         'trainings': trainings,
+        'form': form,
         'categories': TrainingCategory.objects.all()
     }
     return render(request, 'training/admin/training_list.html', context)
@@ -200,32 +203,39 @@ def training_add_view(request):
             training.save()
             messages.success(request, 'Training video added successfully.')
             return redirect('training_list')
+        else:
+            messages.error(request, 'Please correct the errors below.')
     else:
         form = TrainingForm()
-
-    return render(request, 'training/admin/training_form.html', {
+    
+    context = {
         'form': form,
         'title': 'Add Training Video'
-    })
+    }
+    return render(request, 'training/admin/training_form.html', context)
 
 @login_required
 @role_required(['ADMIN'])
 def training_edit_view(request, pk):
     training = get_object_or_404(Training, pk=pk)
+    
     if request.method == 'POST':
         form = TrainingForm(request.POST, instance=training)
         if form.is_valid():
             form.save()
             messages.success(request, 'Training video updated successfully.')
             return redirect('training_list')
+        else:
+            messages.error(request, 'Please correct the errors below.')
     else:
         form = TrainingForm(instance=training)
-
-    return render(request, 'training/admin/training_form.html', {
+    
+    context = {
         'form': form,
         'training': training,
         'title': 'Edit Training Video'
-    })
+    }
+    return render(request, 'training/admin/training_form.html', context)
 
 @login_required
 @role_required(['ADMIN'])

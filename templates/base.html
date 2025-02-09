@@ -94,21 +94,26 @@
 
             <!-- Sidebar Menu -->
             <nav class="mt-2">
-                <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu">
+                <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
+                    <!-- Dashboard -->
                     <li class="nav-item">
                         <a href="{% url 'admin_dashboard' %}" class="nav-link {% if request.resolver_match.url_name == 'admin_dashboard' %}active{% endif %}">
                             <i class="nav-icon fas fa-tachometer-alt"></i>
                             <p>Dashboard</p>
                         </a>
                     </li>
+
+                    <!-- Users -->
                     <li class="nav-item">
                         <a href="{% url 'user_list' %}" class="nav-link {% if 'user' in request.path %}active{% endif %}">
                             <i class="nav-icon fas fa-users"></i>
                             <p>Users</p>
                         </a>
                     </li>
-                    <li class="nav-item">
-                        <a href="#" class="nav-link">
+
+                    <!-- Tires -->
+                    <li class="nav-item {% if 'tire' in request.path %}menu-open{% endif %}">
+                        <a href="#" class="nav-link {% if 'tire' in request.path %}active{% endif %}">
                             <i class="nav-icon fas fa-tire"></i>
                             <p>
                                 Tires
@@ -117,31 +122,66 @@
                         </a>
                         <ul class="nav nav-treeview">
                             <li class="nav-item">
-                                <a href="{% url 'tire_list' %}" class="nav-link">
+                                <a href="{% url 'tire_list' %}" class="nav-link {% if request.resolver_match.url_name == 'tire_list' %}active{% endif %}">
                                     <i class="far fa-circle nav-icon"></i>
                                     <p>All Tires</p>
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a href="{% url 'tire_add' %}" class="nav-link">
+                                <a href="{% url 'tire_add' %}" class="nav-link {% if request.resolver_match.url_name == 'tire_add' %}active{% endif %}">
                                     <i class="far fa-circle nav-icon"></i>
                                     <p>Add New Tire</p>
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a href="{% url 'tire_categories' %}" class="nav-link">
+                                <a href="{% url 'tire_categories' %}" class="nav-link {% if request.resolver_match.url_name == 'tire_categories' %}active{% endif %}">
                                     <i class="far fa-circle nav-icon"></i>
                                     <p>Categories</p>
                                 </a>
                             </li>
                         </ul>
                     </li>
+
+                    <!-- Reports -->
                     <li class="nav-item">
                         <a href="{% url 'report_list' %}" class="nav-link {% if 'report' in request.path %}active{% endif %}">
                             <i class="nav-icon fas fa-clipboard-list"></i>
                             <p>Reports</p>
                         </a>
                     </li>
+
+                    <!-- Training (Admin Only) -->
+                    {% if user.role == 'ADMIN' %}
+                    <li class="nav-item {% if 'training' in request.path %}menu-open{% endif %}">
+                        <a href="#" class="nav-link {% if 'training' in request.path %}active{% endif %}">
+                            <i class="nav-icon fas fa-graduation-cap"></i>
+                            <p>
+                                Training
+                                <i class="right fas fa-angle-left"></i>
+                            </p>
+                        </a>
+                        <ul class="nav nav-treeview">
+                            <li class="nav-item">
+                                <a href="{% url 'training_list' %}" class="nav-link {% if request.resolver_match.url_name == 'training_list' %}active{% endif %}">
+                                    <i class="far fa-circle nav-icon"></i>
+                                    <p>All Videos</p>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="{% url 'training_category_list' %}" class="nav-link {% if request.resolver_match.url_name == 'training_category_list' %}active{% endif %}">
+                                    <i class="far fa-circle nav-icon"></i>
+                                    <p>Categories</p>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="{% url 'training_requests' %}" class="nav-link {% if request.resolver_match.url_name == 'training_requests' %}active{% endif %}">
+                                    <i class="far fa-circle nav-icon"></i>
+                                    <p>Requests</p>
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+                    {% endif %}
                 </ul>
             </nav>
             <!-- /.sidebar-menu -->
@@ -185,16 +225,21 @@
 
 <!-- REQUIRED SCRIPTS -->
 <!-- jQuery -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.1/jquery.min.js"></script>
 <!-- Bootstrap 4 -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/4.6.0/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/4.6.2/js/bootstrap.bundle.min.js"></script>
 <!-- AdminLTE App -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/admin-lte/3.2.0/js/adminlte.min.js"></script>
 <!-- Overlay Scrollbars -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/overlayscrollbars/1.13.0/js/jquery.overlayScrollbars.min.js"></script>
 
+
 <script>
 $(document).ready(function() {
+    // Initialize AdminLTE components
+    //$('[data-widget="pushmenu"]').PushMenu('toggle');
+
+
     // Handle logout with CSRF token
     $('#logout-form').on('submit', function(e) {
         e.preventDefault();
@@ -207,6 +252,7 @@ $(document).ready(function() {
             }
         });
     });
+    
 });
 </script>
 
