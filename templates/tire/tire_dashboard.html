@@ -1,0 +1,320 @@
+{# tire/templates/tire/tire_dashboard.html #}
+{% extends "base.html" %}
+
+{% block title %}Tire Dashboard - Hamrah Tire{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3">Tire Dashboard</h1>
+        <div class="btn-group">
+            <a href="{% url 'tire_list' %}" class="btn btn-secondary">
+                <i class="fas fa-list me-2"></i>View All Tires
+            </a>
+            <a href="{% url 'export_tire_data' %}" class="btn btn-success">
+                <i class="fas fa-file-export me-2"></i>Export Data
+            </a>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                Total Tires
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                {{ stats.total_tires }}
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-tire fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                In Use
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                {{ stats.in_use }}
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-truck fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                In Warehouse
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                {{ stats.in_warehouse }}
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-warehouse fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-danger shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">
+                                Pending Inspections
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                {{ stats.pending_inspections }}
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-exclamation-triangle fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Tire Distribution Chart -->
+        <div class="col-lg-6">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="fas fa-chart-pie me-2"></i>Tire Status Distribution
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container" style="position: relative; height:300px;">
+                        <canvas id="statusDistributionChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Critical Issues -->
+        <div class="col-lg-6">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="fas fa-exclamation-circle me-2"></i>Critical Issues
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table" id="criticalIssuesTable">
+                            <thead>
+                                <tr>
+                                    <th>Tire</th>
+                                    <th>Issue</th>
+                                    <th>Reported</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for issue in critical_issues %}
+                                <tr>
+                                    <td>{{ issue.tire.serial_number }}</td>
+                                    <td>{{ issue.notes }}</td>
+                                    <td>{{ issue.inspection_date|date:"M d, Y" }}</td>
+                                    <td>
+                                        <a href="{% url 'tire_detail' issue.tire.id %}" 
+                                           class="btn btn-sm btn-primary">
+                                            View
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="4" class="text-center">No critical issues found</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Recent Inspections -->
+        <div class="col-lg-6">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="fas fa-clipboard-check me-2"></i>Recent Inspections
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table" id="inspectionsTable">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Tire</th>
+                                    <th>Condition</th>
+                                    <th>Expert</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for inspection in recent_inspections %}
+                                <tr>
+                                    <td>{{ inspection.inspection_date|date:"M d, Y" }}</td>
+                                    <td>{{ inspection.tire.serial_number }}</td>
+                                    <td>
+                                        <div class="rating">
+                                            {% for i in "12345" %}
+                                            <i class="fas fa-star {% if forloop.counter <= inspection.condition_rating %}text-warning{% else %}text-muted{% endif %}"></i>
+                                            {% endfor %}
+                                        </div>
+                                    </td>
+                                    <td>{{ inspection.expert.username }}</td>
+                                    <td>
+                                        <a href="{% url 'tire_detail' inspection.tire.id %}" 
+                                           class="btn btn-sm btn-primary">
+                                            View
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="5" class="text-center">No recent inspections found</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Repairs -->
+        <div class="col-lg-6">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="fas fa-wrench me-2"></i>Recent Repairs
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table" id="repairsTable">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Tire</th>
+                                    <th>Status</th>
+                                    <th>Requested By</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for repair in recent_repairs %}
+                                <tr>
+                                    <td>{{ repair.request_date|date:"M d, Y" }}</td>
+                                    <td>{{ repair.tire.serial_number }}</td>
+                                    <td>
+                                        <span class="badge 
+                                            {% if repair.status == 'PENDING' %}bg-warning
+                                            {% elif repair.status == 'APPROVED' %}bg-success
+                                            {% elif repair.status == 'REJECTED' %}bg-danger
+                                            {% else %}bg-info{% endif %}">
+                                            {{ repair.get_status_display }}
+                                        </span>
+                                    </td>
+                                    <td>{{ repair.requested_by.username }}</td>
+                                    <td>
+                                        <a href="{% url 'tire_detail' repair.tire.id %}" 
+                                           class="btn btn-sm btn-primary">
+                                            View
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="5" class="text-center">No recent repairs found</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+$(document).ready(function() {
+    // Initialize DataTables
+    $('#criticalIssuesTable, #inspectionsTable, #repairsTable').DataTable({
+        "pageLength": 5,
+        "lengthChange": false,
+        "searching": false,
+        "order": [[0, "desc"]]
+    });
+
+    // Status Distribution Chart
+    const ctx = document.getElementById('statusDistributionChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'pie',
+        data: {
+            labels: ['In Warehouse', 'In Use', 'Disposed'],
+            datasets: [{
+                data: [
+                    {{ stats.in_warehouse }},
+                    {{ stats.in_use }},
+                    {{ stats.disposed }}
+                ],
+                backgroundColor: [
+                    '#36b9cc',  // info
+                    '#1cc88a',  // success
+                    '#e74a3b'   // danger
+                ],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            }
+        }
+    });
+});
+</script>
+{% endblock %}

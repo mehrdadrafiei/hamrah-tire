@@ -1,0 +1,278 @@
+{# tire/templates/tire/tire_detail.html #}
+{% extends "base.html" %}
+
+{% block title %}Tire Details - {{ tire.serial_number }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3">Tire Details - {{ tire.serial_number }}</h1>
+            <span class="badge {% if tire.status == 'IN_WAREHOUSE' %}bg-info
+                        {% elif tire.status == 'IN_USE' %}bg-success
+                        {% else %}bg-danger{% endif %}">
+                {{ tire.get_status_display }}
+            </span>
+        </div>
+        <div class="btn-group">
+            {% if user.role == 'ADMIN' %}
+            <button type="button" class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#statusModal">
+                <i class="fas fa-edit me-2"></i>Update Status
+            </button>
+            {% endif %}
+            <a href="{% url 'tire_list' %}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left me-2"></i>Back to List
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Basic Info Card -->
+        <div class="col-lg-4">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h6 class="card-title mb-0">Basic Information</h6>
+                </div>
+                <div class="card-body">
+                    <dl class="row mb-0">
+                        <dt class="col-sm-4">Model</dt>
+                        <dd class="col-sm-8">{{ tire.tire_model.name }}</dd>
+
+                        <dt class="col-sm-4">Brand</dt>
+                        <dd class="col-sm-8">{{ tire.tire_model.brand }}</dd>
+
+                        <dt class="col-sm-4">Size</dt>
+                        <dd class="col-sm-8">{{ tire.tire_model.size }}</dd>
+
+                        <dt class="col-sm-4">Pattern</dt>
+                        <dd class="col-sm-8">{{ tire.tire_model.pattern }}</dd>
+
+                        <dt class="col-sm-4">Serial Number</dt>
+                        <dd class="col-sm-8">{{ tire.serial_number }}</dd>
+
+                        <dt class="col-sm-4">Owner</dt>
+                        <dd class="col-sm-8">{{ tire.owner.username }}</dd>
+
+                        <dt class="col-sm-4">Working Hours</dt>
+                        <dd class="col-sm-8">{{ tire.working_hours }} hours</dd>
+
+                        <dt class="col-sm-4">Tread Depth</dt>
+                        <dd class="col-sm-8">{{ tire.tread_depth }} mm</dd>
+
+                        <dt class="col-sm-4">Purchase Date</dt>
+                        <dd class="col-sm-8">{{ tire.purchase_date|date:"M d, Y" }}</dd>
+                    </dl>
+                </div>
+            </div>
+
+            <!-- Order Info Card -->
+            {% if tire.order_item %}
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h6 class="card-title mb-0">Order Information</h6>
+                </div>
+                <div class="card-body">
+                    <dl class="row mb-0">
+                        <dt class="col-sm-4">Order #</dt>
+                        <dd class="col-sm-8">
+                            <a href="{% url 'order_detail' tire.order_item.order.id %}">
+                                {{ tire.order_item.order.id }}
+                            </a>
+                        </dd>
+
+                        <dt class="col-sm-4">Order Date</dt>
+                        <dd class="col-sm-8">
+                            {{ tire.order_item.order.order_date|date:"M d, Y" }}
+                        </dd>
+
+                        <dt class="col-sm-4">Status</dt>
+                        <dd class="col-sm-8">
+                            {{ tire.order_item.order.get_status_display }}
+                        </dd>
+                    </dl>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Main Content Column -->
+        <div class="col-lg-8">
+            <!-- Inspection History -->
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h6 class="card-title mb-0">Inspection History</h6>
+                    {% if user.role == 'TECHNICAL' %}
+                    <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#inspectionModal">
+                        <i class="fas fa-plus me-1"></i>New Inspection
+                    </button>
+                    {% endif %}
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table" id="inspectionsTable">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Expert</th>
+                                    <th>Condition</th>
+                                    <th>Tread Depth</th>
+                                    <th>Working Hours</th>
+                                    <th>Critical</th>
+                                    <th>Notes</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for inspection in inspections %}
+                                <tr>
+                                    <td>{{ inspection.inspection_date|date:"M d, Y H:i" }}</td>
+                                    <td>{{ inspection.expert.username }}</td>
+                                    <td>
+                                        <div class="rating me-2">
+                                            {% for i in "12345" %}
+                                            <i class="fas fa-star {% if forloop.counter <= inspection.condition_rating %}text-warning{% else %}text-muted{% endif %}"></i>
+                                            {% endfor %}
+                                        </div>
+                                    </td>
+                                    <td>{{ inspection.tread_depth }} mm</td>
+                                    <td>{{ inspection.working_hours }} hrs</td>
+                                    <td>
+                                        <span class="badge {% if inspection.requires_immediate_attention %}bg-danger{% else %}bg-success{% endif %}">
+                                            {{ inspection.requires_immediate_attention|yesno:"Yes,No" }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        {% if inspection.notes %}
+                                        <button type="button" 
+                                                class="btn btn-sm btn-outline-info"
+                                                data-bs-toggle="tooltip"
+                                                data-bs-placement="left"
+                                                title="{{ inspection.notes }}">
+                                            <i class="fas fa-info-circle"></i>
+                                        </button>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="7" class="text-center">No inspection records found</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Repair History -->
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h6 class="card-title mb-0">Repair History</h6>
+                    <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#repairModal">
+                        <i class="fas fa-plus me-1"></i>Request Repair
+                    </button>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table" id="repairsTable">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Requested By</th>
+                                    <th>Status</th>
+                                    <th>Description</th>
+                                    <th>Completion Date</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for repair in repairs %}
+                                <tr>
+                                    <td>{{ repair.request_date|date:"M d, Y" }}</td>
+                                    <td>{{ repair.requested_by.username }}</td>
+                                    <td>
+                                        <span class="badge 
+                                            {% if repair.status == 'PENDING' %}bg-warning
+                                            {% elif repair.status == 'APPROVED' %}bg-success
+                                            {% elif repair.status == 'REJECTED' %}bg-danger
+                                            {% else %}bg-info{% endif %}">
+                                            {{ repair.get_status_display }}
+                                        </span>
+                                    </td>
+                                    <td>{{ repair.description }}</td>
+                                    <td>
+                                        {% if repair.completion_date %}
+                                        {{ repair.completion_date|date:"M d, Y" }}
+                                        {% else %}
+                                        -
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="5" class="text-center">No repair records found</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Status Update Modal -->
+{% if user.role == 'ADMIN' %}
+<div class="modal fade" id="statusModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Update Tire Status</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post" action="{% url 'tire_status_update' %}">
+                {% csrf_token %}
+                <input type="hidden" name="tire_ids" value="{{ tire.id }}">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label class="form-label">Current Status</label>
+                        <input type="text" class="form-control" value="{{ tire.get_status_display }}" readonly>
+                    </div>
+                    <div class="form-group mt-3">
+                        <label class="form-label">New Status</label>
+                        <select name="status" class="form-select" required>
+                            {% for value, label in status_choices %}
+                            <option value="{{ value }}" {% if tire.status == value %}selected{% endif %}>
+                                {{ label }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Update Status</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Initialize DataTables
+    $('#inspectionsTable, #repairsTable').DataTable({
+        "order": [[0, "desc"]],
+        "pageLength": 5,
+        "lengthChange": false
+    });
+
+    // Initialize tooltips
+    $('[data-bs-toggle="tooltip"]').tooltip();
+});
+</script>
+{% endblock %}

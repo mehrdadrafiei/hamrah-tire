@@ -1,0 +1,81 @@
+{# tire/templates/tire/model_list.html #}
+{% extends "base.html" %}
+
+{% block title %}Tire Models - Hamrah Tire{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3">Tire Models</h1>
+        {% if user.role == 'ADMIN' %}
+        <a href="{% url 'model_create' %}" class="btn btn-primary">
+            <i class="fas fa-plus me-2"></i>Add New Model
+        </a>
+        {% endif %}
+    </div>
+
+    <!-- Models Table -->
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover" id="tireModelsTable">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Brand</th>
+                            <th>Pattern</th>
+                            <th>Size</th>
+                            <th>Category</th>
+                            <th>Status</th>
+                            {% if user.role == 'ADMIN' %}
+                            <th>Actions</th>
+                            {% endif %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for model in tire_models %}
+                        <tr>
+                            <td>{{ model.name }}</td>
+                            <td>{{ model.brand }}</td>
+                            <td>{{ model.pattern }}</td>
+                            <td>{{ model.size }}</td>
+                            <td>{{ model.category.name }}</td>
+                            <td>
+                                <span class="badge {% if model.is_active %}bg-success{% else %}bg-danger{% endif %}">
+                                    {{ model.is_active|yesno:"Active,Inactive" }}
+                                </span>
+                            </td>
+                            {% if user.role == 'ADMIN' %}
+                            <td>
+                                <a href="{% url 'model_edit' model.pk %}" 
+                                   class="btn btn-sm btn-outline-primary">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                            </td>
+                            {% endif %}
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="7" class="text-center">No tire models found</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    $('#tireModelsTable').DataTable({
+        "responsive": true,
+        "order": [[0, "asc"]],
+        "pageLength": 25
+    });
+});
+</script>
+{% endblock %}

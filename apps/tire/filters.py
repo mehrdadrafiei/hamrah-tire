@@ -1,27 +1,26 @@
 from django_filters import rest_framework as filters
-from .models import Tire
+from .models import TireModel
 from .models import RepairRequest, TechnicalReport
 
 
-class TireFilter(filters.FilterSet):
+class TireModelFilter(filters.FilterSet):
     brand = filters.CharFilter(lookup_expr='icontains')
     category = filters.NumberFilter(field_name='category__id')
-    min_working_hours = filters.NumberFilter(field_name="working_hours", lookup_expr='gte')
-    max_working_hours = filters.NumberFilter(field_name="working_hours", lookup_expr='lte')
-    min_tread_depth = filters.NumberFilter(field_name="tread_depth", lookup_expr='gte')
-    max_tread_depth = filters.NumberFilter(field_name="tread_depth", lookup_expr='lte')
-    purchase_date_after = filters.DateFilter(field_name="purchase_date", lookup_expr='gte')
-    purchase_date_before = filters.DateFilter(field_name="purchase_date", lookup_expr='lte')
+    # min_working_hours = filters.NumberFilter(field_name="working_hours", lookup_expr='gte')
+    # max_working_hours = filters.NumberFilter(field_name="working_hours", lookup_expr='lte')
+    # min_tread_depth = filters.NumberFilter(field_name="tread_depth", lookup_expr='gte')
+    # max_tread_depth = filters.NumberFilter(field_name="tread_depth", lookup_expr='lte')
+    # purchase_date_after = filters.DateFilter(field_name="purchase_date", lookup_expr='gte')
+    # purchase_date_before = filters.DateFilter(field_name="purchase_date", lookup_expr='lte')
 
     class Meta:
-        model = Tire
+        model = TireModel
         fields = {
-            'serial_number': ['exact', 'icontains'],
             'model': ['exact', 'icontains'],
             'size': ['exact', 'icontains'],
-            'manufacturer': ['exact', 'icontains'],
-            'status': ['exact', 'in'],
-            'owner': ['exact'],
+            # 'manufacturer': ['exact', 'icontains'],
+            # 'status': ['exact', 'in'],
+            # 'owner': ['exact'],
             'brand': ['exact', 'icontains'],
             'category': ['exact'],
         }

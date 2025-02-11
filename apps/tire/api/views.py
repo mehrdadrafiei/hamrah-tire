@@ -15,7 +15,7 @@ from .serializers import (
     RepairRequestSerializer, 
     TechnicalReportSerializer
 )
-from ..filters import TireFilter
+from ..filters import TireModelFilter
 from .permissions import TirePermission, RepairRequestPermission, TechnicalReportPermission
 from rest_framework.pagination import PageNumberPagination
 
@@ -26,7 +26,6 @@ class CustomPageNumberPagination(PageNumberPagination):
 
 @extend_schema(tags=['Tires'])
 class TireViewSet(viewsets.ModelViewSet):
-    filterset_class = TireFilter
     search_fields = ['brand', 'serial_number', 'model', 'manufacturer']
     ordering_fields = ['purchase_date', 'working_hours', 'tread_depth']
     ordering = ['-purchase_date']

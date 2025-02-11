@@ -1,0 +1,110 @@
+{# tire/templates/tire/order_list.html #}
+{% extends "base.html" %}
+
+{% block title %}Tire Orders - Hamrah Tire{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3">Tire Orders</h1>
+        {% if user.role == 'ADMIN' %}
+        <a href="{% url 'order_create' %}" class="btn btn-primary">
+            <i class="fas fa-plus me-2"></i>Create New Order
+        </a>
+        {% endif %}
+    </div>
+
+    <!-- Orders Table -->
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover" id="ordersTable">
+                    <thead>
+                        <tr>
+                            <th>Order ID</th>
+                            <th>Owner</th>
+                            <th>Items</th>
+                            <th>Status</th>
+                            <th>Order Date</th>
+                            <th>Created By</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for order in orders %}
+                        <tr>
+                            <td>{{ order.id }}</td>
+                            <td>{{ order.owner.username }}</td>
+                            <td>
+                                {% for item in order.items.all %}
+                                <div class="mb-1">
+                                    {{ item.quantity }}x {{ item.tire_model.name }}
+                                    {% if item.cleared_quantity %}
+                                    <span class="text-muted">({{ item.cleared_quantity }} cleared)</span>
+                                    {% endif %}
+                                </div>
+                                {% endfor %}
+                            </td>
+                            <td>
+                                <span class="badge 
+                                    {% if order.status == 'PRE_ORDER' %}bg-secondary
+                                    {% elif order.status == 'SUPPLIER_ORDER' %}bg-primary
+                                    {% elif order.status == 'OCEAN_SHIPPING' %}bg-info
+                                    {% elif order.status == 'IN_CUSTOMS' %}bg-warning
+                                    {% elif order.status == 'CUSTOMS_CLEARED' %}bg-info
+                                    {% elif order.status == 'SUPPLIER_WAREHOUSE' %}bg-info
+                                    {% elif order.status == 'AWAITING_SERIAL_NUMBERS' %}bg-warning
+                                    {% elif order.status == 'READY_FOR_DELIVERY' %}bg-success
+                                    {% elif order.status == 'SHIPPING_TO_CUSTOMER' %}bg-primary
+                                    {% elif order.status == 'DELIVERED' %}bg-success
+                                    {% endif %}">
+                                    {{ order.get_status_display }}
+                                </span>
+                            </td>
+                            <td>{{ order.order_date|date:"M d, Y H:i" }}</td>
+                            <td>{{ order.created_by.username }}</td>
+                            <td>
+                                <div class="btn-group">
+                                    <a href="{% url 'order_detail' order.pk %}" 
+                                       class="btn btn-sm btn-outline-primary"
+                                       title="View Details">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    {% if order.status == 'AWAITING_SERIAL_NUMBERS' %}
+                                    <a href="{% url 'order_serial_numbers' order.pk %}"
+                                       class="btn btn-sm btn-outline-warning"
+                                       title="Add Serial Numbers">
+                                        <i class="fas fa-barcode"></i>
+                                    </a>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="7" class="text-center">No orders found</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    $('#ordersTable').DataTable({
+        "responsive": true,
+        "order": [[0, "desc"]],
+        "pageLength": 25,
+        "columnDefs": [
+            { "orderable": false, "targets": [2, 6] }
+        ]
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,225 @@
+{# tire/templates/tire/order_form.html #}
+{% extends "base.html" %}
+
+{% block title %}Create Tire Order - Hamrah Tire{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <form method="post" id="orderForm">
+                {% csrf_token %}
+                
+                <!-- Order Details Card -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h3 class="card-title">Order Details</h3>
+                    </div>
+                    <div class="card-body">
+                        {% if order_form.non_field_errors %}
+                        <div class="alert alert-danger">
+                            {{ order_form.non_field_errors }}
+                        </div>
+                        {% endif %}
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="{{ order_form.owner.id_for_label }}">Owner (Customer)</label>
+                                    {{ order_form.owner }}
+                                    {% if order_form.owner.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ order_form.owner.errors }}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="{{ order_form.status.id_for_label }}">Initial Status</label>
+                                    {{ order_form.status }}
+                                    {% if order_form.status.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ order_form.status.errors }}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <div class="col-12">
+                                <div class="form-group">
+                                    <label for="{{ order_form.notes.id_for_label }}">Notes</label>
+                                    {{ order_form.notes }}
+                                    {% if order_form.notes.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ order_form.notes.errors }}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Order Items Card -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Order Items</h3>
+                    </div>
+                    <div class="card-body">
+                        {{ formset.management_form }}
+                        
+                        {% if formset.non_form_errors %}
+                        <div class="alert alert-danger">
+                            {{ formset.non_form_errors }}
+                        </div>
+                        {% endif %}
+
+                        <div id="orderItems">
+                            {% for form in formset %}
+                            <div class="order-item border rounded p-3 mb-3">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="{{ form.tire_model.id_for_label }}">Tire Model</label>
+                                            {{ form.tire_model }}
+                                            {% if form.tire_model.errors %}
+                                            <div class="invalid-feedback d-block">
+                                                {{ form.tire_model.errors }}
+                                            </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-4">
+                                        <div class="form-group">
+                                            <label for="{{ form.quantity.id_for_label }}">Quantity</label>
+                                            {{ form.quantity }}
+                                            {% if form.quantity.errors %}
+                                            <div class="invalid-feedback d-block">
+                                                {{ form.quantity.errors }}
+                                            </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-2 d-flex align-items-end">
+                                        {% if forloop.counter > 1 %}
+                                        <button type="button" class="btn btn-danger remove-item">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                {{ form.id }}
+                                {% if form.DELETE %}{{ form.DELETE }}{% endif %}
+                            </div>
+                            {% endfor %}
+                        </div>
+
+                        <button type="button" class="btn btn-success" id="addItem">
+                            <i class="fas fa-plus me-2"></i>Add Item
+                        </button>
+                    </div>
+                    <div class="card-footer">
+                        <button type="submit" class="btn btn-primary">Create Order</button>
+                        <a href="{% url 'order_list' %}" class="btn btn-secondary">Cancel</a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Empty Form Template for JavaScript -->
+<div id="emptyForm" style="display: none;">
+    <div class="order-item border rounded p-3 mb-3">
+        <div class="row">
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label>Tire Model</label>
+                    {{ formset.empty_form.tire_model }}
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="form-group">
+                    <label>Quantity</label>
+                    {{ formset.empty_form.quantity }}
+                </div>
+            </div>
+            <div class="col-md-2 d-flex align-items-end">
+                <button type="button" class="btn btn-danger remove-item">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+        </div>
+        {{ formset.empty_form.id }}
+        {% if formset.empty_form.DELETE %}{{ formset.empty_form.DELETE }}{% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+{{ block.super }}
+<!-- Select2 CSS -->
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<link href="https://cdn.jsdelivr.net/npm/@ttskch/select2-bootstrap4-theme@x.x.x/dist/select2-bootstrap4.min.css" rel="stylesheet" />
+{% endblock %}
+
+{% block extra_js %}
+{{ block.super }}
+<!-- Select2 JS -->
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+<script>
+$(document).ready(function() {
+    // Initialize Select2 for dropdowns
+    $('.form-control select').select2({
+        theme: 'bootstrap4'
+    });
+
+    // Dynamic formset handling
+    let formCount = parseInt($('#id_form-TOTAL_FORMS').val());
+    
+    $('#addItem').click(function() {
+        let newForm = $('#emptyForm').html().replace(/__prefix__/g, formCount);
+        $('#orderItems').append(newForm);
+        
+        // Initialize Select2 for new form
+        $('#orderItems').find('select').last().select2({
+            theme: 'bootstrap4'
+        });
+        
+        formCount++;
+        $('#id_form-TOTAL_FORMS').val(formCount);
+    });
+
+    // Remove item handling
+    $(document).on('click', '.remove-item', function() {
+        let item = $(this).closest('.order-item');
+        let deleteCheckbox = item.find('input[type=checkbox][name$=DELETE]');
+        
+        if (deleteCheckbox.length) {
+            deleteCheckbox.prop('checked', true);
+            item.hide();
+        } else {
+            item.remove();
+            formCount--;
+            $('#id_form-TOTAL_FORMS').val(formCount);
+        }
+    });
+
+    // Form validation
+    $('#orderForm').on('submit', function(e) {
+        let visibleItems = $('.order-item:visible').length;
+        if (visibleItems === 0) {
+            e.preventDefault();
+            alert('Please add at least one item to the order.');
+            return false;
+        }
+        return true;
+    });
+});
+</script>
+{% endblock %}

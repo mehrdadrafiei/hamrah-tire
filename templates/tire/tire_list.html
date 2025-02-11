@@ -1,427 +1,298 @@
+{# tire/templates/tire/tire_list.html #}
 {% extends "base.html" %}
 
-{% block title %}Tires - Hamrah Tire{% endblock %}
+{% block title %}User Tires - Hamrah Tire{% endblock %}
 
-{% block content_header %}
-<div class="content-header">
-    <div class="container-fluid">
-        <div class="row mb-2">
-            <div class="col-sm-6">
-                <h1 class="m-0">Tire Management</h1>
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3">User Tires</h1>
+        <div class="btn-group">
+            {% if user.role == 'ADMIN' %}
+            <button type="button" 
+                    id="bulkStatusUpdate" 
+                    class="btn btn-warning" 
+                    disabled>
+                <i class="fas fa-edit me-2"></i>Update Status
+            </button>
+            {% endif %}
+            <a href="{% url 'export_tire_data' %}" class="btn btn-secondary">
+                <i class="fas fa-file-export me-2"></i>Export Data
+            </a>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form id="filterForm" class="row g-3">
+                <div class="col-md-2">
+                    <label class="form-label">Serial Number</label>
+                    <input type="text" class="form-control" name="serial_number">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Model</label>
+                    <input type="text" class="form-control" name="model">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Status</label>
+                    <select class="form-select" name="status">
+                        <option value="">All</option>
+                        {% for value, label in status_choices %}
+                        <option value="{{ value }}">{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                {% if user.role == 'ADMIN' %}
+                <div class="col-md-2">
+                    <label class="form-label">Owner</label>
+                    <select class="form-select" name="owner">
+                        <option value="">All</option>
+                        {% for owner in owners %}
+                        <option value="{{ owner.id }}">{{ owner.username }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                {% endif %}
+                <div class="col-md-4 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary me-2">
+                        <i class="fas fa-filter me-2"></i>Apply Filters
+                    </button>
+                    <button type="button" class="btn btn-secondary" id="clearFilters">
+                        <i class="fas fa-times me-2"></i>Clear
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Tires Table -->
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover" id="tiresTable">
+                    <thead>
+                        <tr>
+                            {% if user.role == 'ADMIN' %}
+                            <th>
+                                <input type="checkbox" class="form-check-input" id="selectAll">
+                            </th>
+                            {% endif %}
+                            <th>Serial Number</th>
+                            <th>Model</th>
+                            <th>Brand</th>
+                            <th>Size</th>
+                            <th>Owner</th>
+                            <th>Status</th>
+                            <th>Working Hours</th>
+                            <th>Last Inspection</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for tire in tires %}
+                        <tr>
+                            {% if user.role == 'ADMIN' %}
+                            <td>
+                                <input type="checkbox" 
+                                       class="form-check-input tire-select" 
+                                       value="{{ tire.id }}">
+                            </td>
+                            {% endif %}
+                            <td>{{ tire.serial_number }}</td>
+                            <td>{{ tire.tire_model.name }}</td>
+                            <td>{{ tire.tire_model.brand }}</td>
+                            <td>{{ tire.tire_model.size }}</td>
+                            <td>{{ tire.owner.username }}</td>
+                            <td>
+                                <span class="badge 
+                                    {% if tire.status == 'IN_WAREHOUSE' %}bg-info
+                                    {% elif tire.status == 'IN_USE' %}bg-success
+                                    {% else %}bg-danger{% endif %}">
+                                    {{ tire.get_status_display }}
+                                </span>
+                            </td>
+                            <td>{{ tire.working_hours }}</td>
+                            <td>
+                                {% if tire.last_inspection %}
+                                {{ tire.last_inspection|date:"M d, Y" }}
+                                {% else %}
+                                Never
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="btn-group">
+                                    <a href="{% url 'tire_detail' tire.pk %}" 
+                                       class="btn btn-sm btn-outline-info"
+                                       data-bs-toggle="tooltip"
+                                       title="View Details">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    {% if user.role == 'ADMIN' %}
+                                    <a href="{% url 'tire_edit' tire.pk %}" 
+                                       class="btn btn-sm btn-outline-warning"
+                                       data-bs-toggle="tooltip"
+                                       title="Edit Tire">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="{% if user.role == 'ADMIN' %}10{% else %}9{% endif %}" 
+                                class="text-center">
+                                No tires found
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
 </div>
-{% endblock %}
 
-{% block content %}
-<section class="content">
-    <div class="container-fluid">
-        <!-- Filters Card -->
-        <div class="card">
-            <div class="card-header">
-                <h3 class="card-title">
-                    <i class="fas fa-filter mr-1"></i>
-                    Filters
-                </h3>
-                <div class="card-tools">
-                    {% if user.role == 'ADMIN' %}
-                    <a href="{% url 'tire_add' %}" class="btn btn-primary btn-sm">
-                        <i class="fas fa-plus mr-1"></i>Add New Tire
-                    </a>
-                    {% endif %}
-                </div>
-            </div>
-            <div class="card-body">
-                <form id="filterForm" class="row">
-                    {% csrf_token %}
-                    <div class="col-md-3">
-                        <div class="form-group">
-                            <label>Brand</label>
-                            <input type="text" class="form-control" name="brand">
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="form-group">
-                            <label>Model</label>
-                            <input type="text" class="form-control" name="model">
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="form-group">
-                            <label>Status</label>
-                            <select class="form-control" name="status">
-                                <option value="">All</option>
-                                {% for status in status_choices %}
-                                    <option value="{{ status.0 }}">{{ status.1 }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="form-group">
-                            <label>Category</label>
-                            <select class="form-control" name="category">
-                                <option value="">All</option>
-                                {% for category in categories %}
-                                    <option value="{{ category.id }}">{{ category.name }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                    </div>
-                    <div class="col-12">
-                        <button type="submit" class="btn btn-primary mr-2">
-                            <i class="fas fa-filter mr-1"></i>Apply Filters
-                        </button>
-                        <button type="button" class="btn btn-default" id="clearFilters">
-                            <i class="fas fa-times mr-1"></i>Clear Filters
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-
-        <!-- Tires Table Card -->
-        <div class="card">
-            <div class="card-header">
-                <h3 class="card-title">
-                    <i class="fas fa-tire mr-1"></i>
-                    Tire List
-                </h3>
-            </div>
-            <div class="card-body">
-                <div class="table-responsive">
-                    <table class="table table-bordered table-hover" id="tiresTable">
-                        <thead>
-                            <tr>
-                                <th>Title</th>
-                                <th>Serial Number</th>
-                                <th>Brand</th>
-                                <th>Model</th>
-                                <th>Compound</th>
-                                <th>Pattern</th>
-                                <th>Size</th>
-                                <th>Category</th>
-                                <th>Working Hours</th>
-                                <th>Status</th>
-                                <th>Owner</th>
-                                {% if user.role == 'ADMIN' %}
-                                <th>Actions</th>
-                                {% endif %}
-                            </tr>
-                        </thead>
-                        <tbody></tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
-
+<!-- Status Update Modal -->
 {% if user.role == 'ADMIN' %}
-<!-- Delete Modal -->
-<div class="modal fade" id="deleteTireModal">
+<div class="modal fade" id="statusModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h4 class="modal-title">Delete Tire</h4>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
+                <h5 class="modal-title">Update Tire Status</h5>
+                <button type="button" class="btn-close" data-dismiss="modal"></button>
             </div>
-            <div class="modal-body">
-                <p>Are you sure you want to delete the tire "<span id="tireToDelete"></span>"?</p>
-                <p class="text-danger">This action cannot be undone.</p>
-            </div>
-            <div class="modal-footer justify-content-between">
-                <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-danger" id="confirmDelete">Delete</button>
-            </div>
+            <form id="statusUpdateForm">
+                {% csrf_token %}
+                <input type="hidden" name="tire_ids" id="tireIds">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label class="form-label">New Status</label>
+                        <select name="status" class="form-select" required>
+                            {% for value, label in status_choices %}
+                            <option value="{{ value }}">{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                        Cancel
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        Update Status
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 </div>
 {% endif %}
 {% endblock %}
 
-{% block extra_css %}
-<!-- DataTables -->
-<link rel="stylesheet" href="https://cdn.datatables.net/1.10.24/css/dataTables.bootstrap4.min.css">
-<link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.2.9/css/responsive.bootstrap4.min.css">
-{% endblock %}
-
 {% block extra_js %}
-<!-- DataTables -->
-<script src="https://cdn.datatables.net/1.10.24/js/jquery.dataTables.min.js"></script>
-<script src="https://cdn.datatables.net/1.10.24/js/dataTables.bootstrap4.min.js"></script>
-<script src="https://cdn.datatables.net/responsive/2.2.9/js/dataTables.responsive.min.js"></script>
-<script src="https://cdn.datatables.net/responsive/2.2.9/js/responsive.bootstrap4.min.js"></script>
-
-<!-- Keep your existing script, but update the modal related code -->
 <script>
 $(document).ready(function() {
-    const isAdmin = '{{ user.role }}' === 'ADMIN';
-    
-    // Get CSRF token from the cookie
-    function getCookie(name) {
-        let cookieValue = null;
-        if (document.cookie && document.cookie !== '') {
-            const cookies = document.cookie.split(';');
-            for (let i = 0; i < cookies.length; i++) {
-                const cookie = cookies[i].trim();
-                if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                    break;
-                }
-            }
-        }
-        return cookieValue;
-    }
-
-    // Setup AJAX defaults
-    $.ajaxSetup({
-        beforeSend: function(xhr, settings) {
-            if (!(/^(GET|HEAD|OPTIONS|TRACE)$/.test(settings.type)) && !this.crossDomain) {
-                xhr.setRequestHeader("X-CSRFToken", getCookie('csrftoken'));
-            }
-            const token = localStorage.getItem('access_token');
-            if (token) {
-                xhr.setRequestHeader('Authorization', `Bearer ${token}`);
-            }
+    // Initialize DataTable
+    const table = $('#tiresTable').DataTable({
+        "responsive": true,
+        "order": [[{% if user.role == 'ADMIN' %}1{% else %}0{% endif %}, "asc"]],
+        "pageLength": 25,
+        {% if user.role == 'ADMIN' %}
+        "columnDefs": [
+            { "orderable": false, "targets": [0, -1] }
+        ],
+        {% else %}
+        "columnDefs": [
+            { "orderable": false, "targets": [-1] }
+        ],
+        {% endif %}
+        "language": {
+            "emptyTable": "No tires found",
+            "zeroRecords": "No matching tires found",
+            "info": "Showing _START_ to _END_ of _TOTAL_ tires",
+            "infoEmpty": "Showing 0 to 0 of 0 tires",
+            "infoFiltered": "(filtered from _MAX_ total tires)"
         }
     });
 
-    try {
-        const baseColumns = [
-            { data: 'title', defaultContent: '' },
-            { data: 'serial_number', defaultContent: '' },
-            { data: 'brand', defaultContent: '' },
-            { data: 'model', defaultContent: '' },
-            { data: 'compound', defaultContent: '' },
-            { data: 'pattern', defaultContent: '' },
-            { data: 'size', defaultContent: '' },
-            { 
-                data: 'category',
-                defaultContent: '',
-                render: function(data) {
-                    return data ? data.name : '';
-                }
-            },
-            { data: 'working_hours', defaultContent: '' },
-            { 
-                data: 'status',
-                defaultContent: '',
-                render: function(data) {
-                    let statusText = data ? data.replace(/_/g, ' ') : '';
-                    let bgClass = 'bg-secondary'; // Default color
-                    
-                    switch(data) {
-                        case 'IN_USE':
-                            bgClass = 'bg-success';
-                            break;
-                        case 'IN_REPAIR':
-                            bgClass = 'bg-warning text-dark';
-                            break;
-                        case 'DISPOSED':
-                            bgClass = 'bg-danger';
-                            break;
-                        case 'ORDERED':
-                            bgClass = 'bg-info';
-                            break;
-                        case 'DELIVERED':
-                            bgClass = 'bg-primary';
-                            break;
-                        case 'WAREHOUSING':
-                            bgClass = 'bg-info';
-                            break;
-                        case 'CUSTOMS_CLEARANCE':
-                            bgClass = 'bg-warning text-dark';
-                            break;
-                        case 'CURRENCY_ALLOCATION':
-                            bgClass = 'bg-info';
-                            break;
-                    }
-                    
-                    return statusText ? `<span class="badge ${bgClass}">${statusText}</span>` : '';
-                }
-            },
-            { data: 'owner_username', defaultContent: '' }
-        ];
+    // Handle select all checkbox
+    $('#selectAll').on('change', function() {
+        $('.tire-select').prop('checked', $(this).is(':checked'));
+        updateBulkButton();
+    });
 
-        const columns = isAdmin ? [...baseColumns, {
-            data: null,
-            defaultContent: '',
-            orderable: false,
-            render: function(data, type, row) {
-                if (!row || !row.id) return '';
-                return `
-                    <div class="btn-group">
-                        <a href="/tires/${row.id}/edit/" class="btn btn-sm btn-outline-primary">
-                            <i class="fas fa-edit"></i>
-                        </a>
-                        <button type="button" 
-                                class="btn btn-sm btn-outline-danger delete-tire" 
-                                data-tire-id="${row.id}"
-                                data-tire-title="${row.title || ''}"
-                                data-bs-toggle="modal" 
-                                data-bs-target="#deleteTireModal">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </div>
-                `;
-            }
-        }] : baseColumns;
-        const table = $('#tiresTable').DataTable({
-            processing: true,
-            serverSide: false,
-            ajax: {
-                url: '/api/tires/',
-                type: 'GET',
-                data: function(d) {
-                    // Get current page from URL or default to 1
-                    const urlParams = new URLSearchParams(window.location.search);
-                    const currentPage = parseInt(urlParams.get('page')) || 1;
-                    
-                    // Add filter form data
-                    const filterData = new FormData($('#filterForm')[0]);
-                    let params = {
-                        page: currentPage
-                    };
-                    
-                    // Add non-empty filter values
-                    for (let pair of filterData.entries()) {
-                        if (pair[1]) {
-                            params[pair[0]] = pair[1];
-                        }
-                    }
-                    
-                    return params;
-                },
-                error: function(xhr, error, thrown) {
-                    console.error('AJAX Error:', error);
-                    if (xhr.status === 401) {
-                        window.location.href = '/accounts/login/';
-                    } else if (xhr.status === 429) {
-                        console.error('Rate limit exceeded. Please wait before making more requests.');
-                    }
-                },
-                dataSrc: function(json) {
-                    console.log('API Response:', json);
-                    updatePagination(json);
-                    return json.results || [];
-                }
-            },
-            columns: columns,
-            dom: 'lrti',
-            paging: false,
-            responsive: true,
-            language: {
-                emptyTable: "No tires found",
-                zeroRecords: "No matching tires found",
-                info: "Showing _START_ to _END_ of _TOTAL_ tires",
-                infoEmpty: "Showing 0 to 0 of 0 tires",
-                infoFiltered: "(filtered from _MAX_ total tires)"
-            }
-        });
+    // Handle individual checkboxes
+    $(document).on('change', '.tire-select', function() {
+        updateBulkButton();
+    });
 
-        function updatePagination(json) {
-            if (!json.count) return;
-
-            const pageSize = 10; // Items per page
-            const totalPages = Math.ceil(json.count / pageSize);
-            const urlParams = new URLSearchParams(window.location.search);
-            const currentPage = parseInt(urlParams.get('page')) || 1;
-
-            let paginationHtml = `
-                <nav aria-label="Page navigation" class="mt-4">
-                    <ul class="pagination justify-content-center">
-                        <li class="page-item ${currentPage === 1 ? 'disabled' : ''}">
-                            <a class="page-link" href="#" data-page="${currentPage - 1}">Previous</a>
-                        </li>
-            `;
-
-            for (let i = 1; i <= totalPages; i++) {
-                paginationHtml += `
-                    <li class="page-item ${currentPage === i ? 'active' : ''}">
-                        <a class="page-link" href="#" data-page="${i}">${i}</a>
-                    </li>
-                `;
-            }
-
-            paginationHtml += `
-                        <li class="page-item ${currentPage === totalPages ? 'disabled' : ''}">
-                            <a class="page-link" href="#" data-page="${currentPage + 1}">Next</a>
-                        </li>
-                    </ul>
-                </nav>
-            `;
-
-            // Replace existing pagination, but only in the table's card body
-            $('.pagination').remove();
-            $('#tiresTable').closest('.card-body').append(paginationHtml);
-
-            // Add click handlers for pagination
-            $('.pagination .page-link').on('click', function(e) {
-                e.preventDefault();
-                const page = $(this).data('page');
-                if (page && !$(this).parent().hasClass('disabled')) {
-                    // Update URL without reloading the page
-                    const newUrl = updateURLParameter(window.location.href, 'page', page);
-                    window.history.pushState({ path: newUrl }, '', newUrl);
-                    // Reload the data
-                    table.ajax.reload();
-                }
-            });
-        }
-
-        // Helper function to update URL parameters
-        function updateURLParameter(url, param, value) {
-            const urlObj = new URL(url);
-            urlObj.searchParams.set(param, value);
-            return urlObj.toString();
-        }
-
-        // Handle filter form submission
-        $('#filterForm').on('submit', function(e) {
-            e.preventDefault();
-            // Reset to page 1 when filtering
-            const newUrl = updateURLParameter(window.location.href, 'page', 1);
-            window.history.pushState({ path: newUrl }, '', newUrl);
-            table.ajax.reload();
-        });
-
-        // Clear filters
-        $('#clearFilters').on('click', function() {
-            $('#filterForm')[0].reset();
-            // Reset to page 1 when clearing filters
-            const newUrl = updateURLParameter(window.location.href, 'page', 1);
-            window.history.pushState({ path: newUrl }, '', newUrl);
-            table.ajax.reload();
-        });
-
-    } catch (error) {
-        console.error('DataTable initialization error:', error);
+    function updateBulkButton() {
+        const selectedCount = $('.tire-select:checked').length;
+        $('#bulkStatusUpdate').prop('disabled', selectedCount === 0)
+            .html(`<i class="fas fa-edit me-2"></i>Update Status (${selectedCount})`);
     }
 
-    // Update modal related code
-    $(document).on('click', '.delete-tire', function() {
-        const tireId = $(this).data('tire-id');
-        const tireTitle = $(this).data('tire-title');
-        $('#tireToDelete').text(tireTitle);
+    // Handle bulk status update
+    $('#bulkStatusUpdate').on('click', function() {
+        const selectedIds = $('.tire-select:checked').map(function() {
+            return $(this).val();
+        }).get();
         
-        $('#confirmDelete').off('click').on('click', function() {
-            $.ajax({
-                url: `/api/tires/${tireId}/`,
-                method: 'DELETE',
-                success: function() {
-                    $('#deleteTireModal').modal('hide');
-                    table.ajax.reload();
-                    toastr.success('Tire deleted successfully');
-                },
-                error: function() {
-                    toastr.error('Failed to delete tire');
-                }
-            });
+        $('#tireIds').val(selectedIds.join(','));
+        $('#statusModal').modal('show');
+    });
+
+    // Handle status update form submission
+    $('#statusUpdateForm').on('submit', function(e) {
+        e.preventDefault();
+        
+        $.ajax({
+            url: '{% url "tire_status_update" %}',
+            method: 'POST',
+            data: $(this).serialize(),
+            success: function(response) {
+                $('#statusModal').modal('hide');
+                window.location.reload();
+            },
+            error: function(xhr) {
+                alert('Error updating status: ' + xhr.responseJSON?.error || 'Unknown error occurred');
+            }
         });
+    });
+
+    // Handle filters
+    $('#filterForm').on('submit', function(e) {
+        e.preventDefault();
+        const formData = new FormData(this);
+        const filters = {};
+        
+        for (const [key, value] of formData.entries()) {
+            if (value) filters[key] = value;
+        }
+        
+        // Apply filters to DataTable
+        table.columns().every(function(index) {
+            const column = this;
+            const filterValue = filters[column.header().textContent.toLowerCase().trim()];
+            
+            if (filterValue) {
+                column.search(filterValue).draw();
+            }
+        });
+    });
+
+    $('#clearFilters').on('click', function() {
+        $('#filterForm')[0].reset();
+        table.search('').columns().search('').draw();
+    });
+
+    // Initialize Bootstrap tooltips
+    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-toggle="tooltip"]'));
+    tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
     });
 });
 </script>

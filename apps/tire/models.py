@@ -14,35 +14,88 @@ class TireCategory(models.Model):
 
     def __str__(self):
         return self.name
-
-class Tire(models.Model):
-    STATUS_CHOICES = (
-        ('ORDERED', 'Ordered'),
-        ('CURRENCY_ALLOCATION', 'Currency Allocation'),
-        ('CUSTOMS_CLEARANCE', 'Customs Clearance'),
-        ('WAREHOUSING', 'In Warehouse'),
-        ('DELIVERED', 'Delivered to Customer'),
-        ('IN_USE', 'In Use'),
-        ('IN_REPAIR', 'In Repair'),
-        ('DISPOSED', 'Disposed'),
-    )
-    title = models.CharField(max_length=100, blank=True)
-    pattern = models.CharField(max_length=100, blank=True)
+    
+class TireModel(models.Model):
+    """Available tire models that can be ordered"""
+    name = models.CharField(max_length=200)
+    brand = models.CharField(max_length=100)
+    pattern = models.CharField(max_length=100)
     compound = models.CharField(max_length=100, blank=True)
-    serial_number = models.CharField(max_length=50, unique=True)
     model = models.CharField(max_length=100)
-    brand = models.CharField(max_length=100, blank=True)
     size = models.CharField(max_length=50)
     manufacturer = models.CharField(max_length=100)
-    purchase_date = models.DateField()
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES)
-    owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='owned_tires')
-    working_hours = models.IntegerField(default=0)
-    tread_depth = models.FloatField(validators=[MinValueValidator(0)])
-    category = models.ForeignKey(TireCategory, on_delete=models.SET_NULL, null=True, blank=True)
-
+    description = models.TextField(blank=True)
+    category = models.ForeignKey('TireCategory', on_delete=models.PROTECT)
+    is_active = models.BooleanField(default=True)
+    initial_tread_depth = models.DecimalField(
+        max_digits=4, 
+        decimal_places=1,
+        validators=[MinValueValidator(0)],
+        default=0  # You might want to set a more appropriate default value
+    )
     class Meta:
-        db_table = 'tires'
+        unique_together = ['brand', 'pattern', 'size']
+
+    def __str__(self):
+        return f"{self.brand} {self.pattern} {self.size}"
+
+class TireOrder(models.Model):
+    """Represents a bulk order of tires"""
+    ORDER_STATUS_CHOICES = [
+        ('PRE_ORDER', 'Pre-Order'),
+        ('SUPPLIER_ORDER', 'Ordered from Supplier'),
+        ('OCEAN_SHIPPING', 'Ocean Shipping'),
+        ('IN_CUSTOMS', 'In Customs'),
+        ('CUSTOMS_CLEARED', 'Customs Cleared'),
+        ('SUPPLIER_WAREHOUSE', 'In Supplier Warehouse'),
+        ('AWAITING_SERIAL_NUMBERS', 'Awaiting Serial Numbers'),
+        ('READY_FOR_DELIVERY', 'Ready for Delivery'),
+        ('SHIPPING_TO_CUSTOMER', 'Shipping to Customer'),
+        ('DELIVERED', 'Delivered to Customer'),
+    ]
+
+    owner = models.ForeignKey(User, on_delete=models.PROTECT)
+    order_date = models.DateTimeField(auto_now_add=True)
+    status = models.CharField(max_length=50, choices=ORDER_STATUS_CHOICES, default='PRE_ORDER')
+    notes = models.TextField(blank=True)
+    created_by = models.ForeignKey(User, on_delete=models.PROTECT, related_name='created_orders')
+    
+    def __str__(self):
+        return f"Order {self.id} - {self.owner.username} ({self.status})"
+
+class TireOrderItem(models.Model):
+    """Individual items within a tire order"""
+    order = models.ForeignKey(TireOrder, on_delete=models.CASCADE, related_name='items')
+    tire_model = models.ForeignKey(TireModel, on_delete=models.PROTECT)
+    quantity = models.PositiveIntegerField(validators=[MinValueValidator(1)])
+    cleared_quantity = models.PositiveIntegerField(default=0)  # For partial customs clearance
+    
+    def __str__(self):
+        return f"{self.quantity}x {self.tire_model} ({self.order.status})"
+
+class Tire(models.Model):
+    """Represents actual physical tires owned by users"""
+    TIRE_STATUS_CHOICES = [
+        ('IN_WAREHOUSE', 'In Warehouse'),
+        ('IN_USE', 'In Use'),
+        ('DISPOSED', 'Disposed'),
+    ]
+
+    serial_number = models.CharField(max_length=100, unique=True)
+    tire_model = models.ForeignKey(TireModel, on_delete=models.PROTECT)
+    owner = models.ForeignKey(User, on_delete=models.PROTECT)
+    order_item = models.ForeignKey(TireOrderItem, on_delete=models.SET_NULL, null=True)
+    status = models.CharField(max_length=20, choices=TIRE_STATUS_CHOICES, default='IN_WAREHOUSE')
+    purchase_date = models.DateField(auto_now_add=True)
+    working_hours = models.PositiveIntegerField(default=0)
+    tread_depth = models.DecimalField(
+        max_digits=4, 
+        decimal_places=1,
+        validators=[MinValueValidator(0)]
+    )
+
+    def __str__(self):
+        return f"{self.serial_number} - {self.tire_model}"
 
 class Warranty(models.Model):
     tire = models.OneToOneField(Tire, on_delete=models.CASCADE)

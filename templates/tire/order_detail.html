@@ -1,0 +1,224 @@
+{# tire/templates/tire/order_detail.html #}
+{% extends "base.html" %}
+
+{% block title %}Order #{{ order.id }} - Hamrah Tire{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3">Order #{{ order.id }}</h1>
+            <span class="badge 
+                {% if order.status == 'PRE_ORDER' %}bg-secondary
+                {% elif order.status == 'SUPPLIER_ORDER' %}bg-primary
+                {% elif order.status == 'OCEAN_SHIPPING' %}bg-info
+                {% elif order.status == 'IN_CUSTOMS' %}bg-warning
+                {% elif order.status == 'CUSTOMS_CLEARED' %}bg-info
+                {% elif order.status == 'SUPPLIER_WAREHOUSE' %}bg-info
+                {% elif order.status == 'AWAITING_SERIAL_NUMBERS' %}bg-warning
+                {% elif order.status == 'READY_FOR_DELIVERY' %}bg-success
+                {% elif order.status == 'SHIPPING_TO_CUSTOMER' %}bg-primary
+                {% elif order.status == 'DELIVERED' %}bg-success
+                {% endif %}">
+                {{ order.get_status_display }}
+            </span>
+        </div>
+        <div class="btn-group">
+            {% if order.status == 'AWAITING_SERIAL_NUMBERS' %}
+            <a href="{% url 'order_serial_numbers' order.pk %}" 
+               class="btn btn-warning">
+                <i class="fas fa-barcode me-2"></i>Add Serial Numbers
+            </a>
+            {% endif %}
+            <a href="{% url 'order_list' %}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left me-2"></i>Back to List
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Order Information -->
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Order Information</h5>
+                </div>
+                <div class="card-body">
+                    <dl class="row mb-0">
+                        <dt class="col-sm-4">Owner</dt>
+                        <dd class="col-sm-8">{{ order.owner.username }}</dd>
+
+                        <dt class="col-sm-4">Order Date</dt>
+                        <dd class="col-sm-8">{{ order.order_date|date:"M d, Y H:i" }}</dd>
+
+                        <dt class="col-sm-4">Created By</dt>
+                        <dd class="col-sm-8">{{ order.created_by.username }}</dd>
+
+                        <dt class="col-sm-4">Status</dt>
+                        <dd class="col-sm-8">{{ order.get_status_display }}</dd>
+                    </dl>
+                </div>
+            </div>
+
+            {% if user.role == 'ADMIN' %}
+            <!-- Status Update Form -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Update Status</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="form-group">
+                            <label for="status">New Status</label>
+                            <select name="status" id="status" class="form-control">
+                                {% for value, label in order.ORDER_STATUS_CHOICES %}
+                                <option value="{{ value }}" {% if order.status == value %}selected{% endif %}>
+                                    {{ label }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Notes</label>
+                            <textarea name="status_notes" class="form-control" rows="3"></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary mt-3">Update Status</button>
+                    </form>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Order Items -->
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Order Items</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Tire Model</th>
+                                    <th>Quantity</th>
+                                    <th>Serial Numbers</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in items %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ item.tire_model.name }}</strong><br>
+                                        <small class="text-muted">
+                                            {{ item.tire_model.brand }} - {{ item.tire_model.size }}
+                                        </small>
+                                    </td>
+                                    <td>{{ item.quantity }}</td>
+                                    <td>
+                                        {% with serial_count=item.tire_set.count %}
+                                        {% if serial_count > 0 %}
+                                            {{ serial_count }}/{{ item.quantity }} assigned
+                                            <button type="button" 
+                                                    class="btn btn-sm btn-outline-info"
+                                                    data-bs-toggle="modal"
+                                                    data-bs-target="#serialModal{{ item.id }}">
+                                                View
+                                            </button>
+                                        {% else %}
+                                            No serial numbers assigned
+                                        {% endif %}
+                                        {% endwith %}
+                                    </td>
+                                    <td>
+                                        {% if item.tire_set.count == item.quantity %}
+                                        <span class="badge bg-success">Complete</span>
+                                        {% elif item.tire_set.count > 0 %}
+                                        <span class="badge bg-warning">Partial</span>
+                                        {% else %}
+                                        <span class="badge bg-secondary">Pending</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Serial Number Modals -->
+{% for item in items %}
+{% if item.tire_set.exists %}
+<div class="modal fade" id="serialModal{{ item.id }}" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Serial Numbers - {{ item.tire_model.name }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Serial Number</th>
+                                <th>Status</th>
+                                <th>Added On</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for tire in item.tire_set.all %}
+                            <tr>
+                                <td>{{ tire.serial_number }}</td>
+                                <td>
+                                    <span class="badge bg-{{ tire.status|lower }}">
+                                        {{ tire.get_status_display }}
+                                    </span>
+                                </td>
+                                <td>{{ tire.created_at|date:"M d, Y H:i" }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endfor %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Initialize Select2 for status dropdown
+    $('#status').select2({
+        theme: 'bootstrap4',
+        minimumResultsForSearch: Infinity
+    });
+
+    // Status update confirmation
+    $('form').on('submit', function(e) {
+        const newStatus = $('#status').val();
+        const currentStatus = '{{ order.status }}';
+        
+        if (newStatus !== currentStatus) {
+            if (!confirm('Are you sure you want to update the order status?')) {
+                e.preventDefault();
+            }
+        }
+    });
+});
+</script>
+{% endblock %}

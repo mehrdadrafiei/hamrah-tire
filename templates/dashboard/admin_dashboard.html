@@ -330,43 +330,6 @@
                     <span aria-hidden="true">&times;</span>
                 </button>
             </div>
-            <form id="addTireForm" method="POST" action="{% url 'tire_add' %}">
-                {% csrf_token %}
-                <div class="modal-body">
-                    <div class="form-group">
-                        <label for="serial_number">Serial Number</label>
-                        <input type="text" class="form-control" id="serial_number" name="serial_number" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="brand">Brand</label>
-                        <input type="text" class="form-control" id="brand" name="brand" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="model">Model</label>
-                        <input type="text" class="form-control" id="model" name="model" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="category">Category</label>
-                        <select class="form-control" id="category" name="category" required>
-                            {% for category in categories %}
-                            <option value="{{ category.id }}">{{ category.name }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="status">Status</label>
-                        <select class="form-control" id="status" name="status" required>
-                            {% for status in status_choices %}
-                            <option value="{{ status.0 }}">{{ status.1 }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                    <button type="submit" class="btn btn-primary">Add Tire</button>
-                </div>
-            </form>
         </div>
     </div>
 </div>

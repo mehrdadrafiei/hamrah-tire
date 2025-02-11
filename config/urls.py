@@ -79,14 +79,36 @@ urlpatterns = [
     path('accounts/password-reset/complete/', account_views.password_reset_complete_view, name='password_reset_complete'),
 
     # Tire Management
-    path('tires/', tire_views.tire_list_view, name='tire_list'),
-    path('tires/add/', tire_views.tire_add_view, name='tire_add'),
-    path('tires/categories/', tire_views.tire_categories_view, name='tire_categories'),
+    # path('tires/', tire_views.tire_list_view, name='tire_list'),
+    # path('tires/add/', tire_views.tire_add_view, name='tire_add'),
     path('tires/<int:pk>/edit/', tire_views.tire_edit_view, name='tire_edit'),
-    path('tires/<int:pk>/delete/', tire_views.tire_delete_view, name='tire_delete'),
+    # path('tires/<int:pk>/delete/', tire_views.tire_delete_view, name='tire_delete'),
+
+    # Tire Model URLs (Catalog)
+    path('models/', tire_views.tire_model_list, name='model_list'),
+    path('models/create/', tire_views.tire_model_create, name='model_create'),
+    path('models/<int:pk>/edit/', tire_views.tire_model_edit, name='model_edit'),
+    
+    # Tire Order URLs
+    path('orders/', tire_views.order_list, name='order_list'),
+    path('orders/create/', tire_views.order_create, name='order_create'),
+    path('orders/<int:pk>/', tire_views.order_detail, name='order_detail'),
+    path('orders/<int:pk>/serial-numbers/', tire_views.order_serial_numbers, name='order_serial_numbers'),
+    path('orders/<int:pk>/mark-ready/', tire_views.order_mark_ready, name='order_mark_ready'),
+    
+    # Individual Tire URLs
+    path('tires/', tire_views.tire_list, name='tire_list'),
+    path('tires/dashboard/', tire_views.tire_dashboard, name='tire_dashboard'),
+    path('tires/<int:pk>/', tire_views.tire_detail, name='tire_detail'),
+    path('tires/status-update/', tire_views.tire_status_update, name='tire_status_update'),
+    path('tires/export/', tire_views.export_tire_data, name='export_tire_data'),
+
+    # Tire Category URLs
     path('tires/categories/', tire_views.tire_categories_view, name='tire_categories'),
     path('tires/categories/<int:pk>/delete/', tire_views.category_delete_view, name='delete_category'),
     path('reports/', tire_views.report_list_view, name='report_list'),
+
+    
     #path('repairs/', account_views.repair_list, name='repair_list'),
 
     # Role-specific Dashboards
