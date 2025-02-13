@@ -23,6 +23,55 @@ from apps.tire.api.views import CustomPageNumberPagination
 
 User = get_user_model()
 
+from rest_framework_simplejwt.views import TokenObtainPairView
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from rest_framework import status
+from rest_framework.response import Response
+from django.contrib.auth import get_user_model
+
+# User = get_user_model()
+
+# class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
+#     username_field = 'phone'
+
+#     def validate(self, attrs):
+#         # Rename phone to username for compatibility with parent class
+#         attrs['username'] = attrs.get('phone')
+#         return super().validate(attrs)
+
+#     @classmethod
+#     def get_token(cls, user):
+#         token = super().get_token(user)
+        
+#         # Add custom claims
+#         token['phone'] = user.phone
+#         token['role'] = user.role
+#         token['name'] = user.get_full_name()
+        
+#         return token
+
+# class CustomTokenObtainPairView(TokenObtainPairView):
+#     serializer_class = CustomTokenObtainPairSerializer
+
+#     def post(self, request, *args, **kwargs):
+#         serializer = self.get_serializer(data=request.data)
+        
+#         try:
+#             serializer.is_valid(raise_exception=True)
+#         except Exception as e:
+#             return Response({
+#                 'error': 'Invalid phone number or password'
+#             }, status=status.HTTP_401_UNAUTHORIZED)
+
+#         user = User.objects.get(phone=request.data.get('phone'))
+#         if not user.is_active:
+#             return Response({
+#                 'error': 'This account is inactive'
+#             }, status=status.HTTP_401_UNAUTHORIZED)
+
+#         return Response(serializer.validated_data, status=status.HTTP_200_OK)
+    
+
 @extend_schema(tags=['Authentication'])
 class CustomTokenObtainPairView(TokenObtainPairView):
     """

@@ -10,7 +10,7 @@ User = get_user_model()
 class UserBasicSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ('id', 'username', 'role')
+        fields = ['id', 'phone', 'first_name', 'last_name', 'role']
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -20,6 +20,42 @@ class UserSerializer(serializers.ModelSerializer):
             'is_active', 'email_verified', 'last_login'
         )
         read_only_fields = ['id', 'email_verified']
+
+
+class UserDetailSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = [
+            'id', 'phone', 'email', 'first_name', 'last_name', 'role',
+            'company_name', 'job_title', 'department', 'employee_id',
+            'address', 'city', 'province', 'postal_code',
+            'is_active', 'date_joined', 'last_login'
+        ]
+        read_only_fields = ['id', 'date_joined', 'last_login']
+
+class LoginSerializer(serializers.Serializer):
+    phone = serializers.CharField()
+    password = serializers.CharField(write_only=True)
+    remember_me = serializers.BooleanField(required=False, default=False)
+
+    def validate(self, attrs):
+        phone = attrs.get('phone')
+        password = attrs.get('password')
+
+        if phone and password:
+            try:
+                user = User.objects.get(phone=phone)
+                if not user.check_password(password):
+                    raise serializers.ValidationError('Invalid phone number or password.')
+                if not user.is_active:
+                    raise serializers.ValidationError('This account is inactive.')
+            except User.DoesNotExist:
+                raise serializers.ValidationError('Invalid phone number or password.')
+        else:
+            raise serializers.ValidationError('Must include "phone" and "password".')
+
+        attrs['user'] = user
+        return attrs
 
 class UserCreateSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, required=True)

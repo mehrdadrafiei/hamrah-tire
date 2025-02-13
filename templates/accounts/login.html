@@ -20,7 +20,7 @@
         
         {% if form.errors %}
         <div class="alert alert-danger">
-            Invalid username or password.
+            Invalid phone number or password.
         </div>
         {% endif %}
 
@@ -35,10 +35,10 @@
         {% endif %}
 
         <div class="input-group mb-3">
-          <input type="text" class="form-control" id="username" name="username" placeholder="Username" required>
+          <input type="text" class="form-control" id="phone" name="phone" placeholder="Phone Number" required>
           <div class="input-group-append">
             <div class="input-group-text">
-              <span class="fas fa-user"></span>
+              <span class="fas fa-phone"></span>
             </div>
           </div>
         </div>
@@ -100,8 +100,32 @@ $(document).ready(function() {
         }
     });
 
-    // Handle form submission
+    // Add phone number validation
+    function isValidPhone(phone) {
+        return /^09[0-9]{9}$/.test(phone);
+    }
+
+    $('#phone').on('input', function() {
+        const phone = $(this).val();
+        if (phone && !isValidPhone(phone)) {
+            $(this).addClass('is-invalid');
+            if (!$(this).next('.invalid-feedback').length) {
+                $(this).after('<div class="invalid-feedback">Please enter a valid Iranian phone number (e.g., 09121234567)</div>');
+            }
+        } else {
+            $(this).removeClass('is-invalid');
+            $(this).next('.invalid-feedback').remove();
+        }
+    });
+
     $('#loginForm').on('submit', function(e) {
+        const phone = $('#phone').val();
+        if (!isValidPhone(phone)) {
+            e.preventDefault();
+            $('#phone').addClass('is-invalid');
+            return;
+        }
+
         const button = $('#loginButton');
         button.prop('disabled', true);
         button.find('.spinner-border').removeClass('d-none');

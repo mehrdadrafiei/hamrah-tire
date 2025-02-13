@@ -17,7 +17,7 @@
         </div>
         <div class="btn-group">
             {% if user.role == 'ADMIN' %}
-            <button type="button" class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#statusModal">
+            <button type="button" class="btn btn-warning" data-toggle="modal" data-target="#statusModal">
                 <i class="fas fa-edit me-2"></i>Update Status
             </button>
             {% endif %}
@@ -103,7 +103,7 @@
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h6 class="card-title mb-0">Inspection History</h6>
                     {% if user.role == 'TECHNICAL' %}
-                    <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#inspectionModal">
+                    <button class="btn btn-primary btn-sm" data-toggle="modal" data-target="#inspectionModal">
                         <i class="fas fa-plus me-1"></i>New Inspection
                     </button>
                     {% endif %}
@@ -123,41 +123,33 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                {% for inspection in inspections %}
-                                <tr>
-                                    <td>{{ inspection.inspection_date|date:"M d, Y H:i" }}</td>
-                                    <td>{{ inspection.expert.username }}</td>
-                                    <td>
-                                        <div class="rating me-2">
-                                            {% for i in "12345" %}
-                                            <i class="fas fa-star {% if forloop.counter <= inspection.condition_rating %}text-warning{% else %}text-muted{% endif %}"></i>
-                                            {% endfor %}
-                                        </div>
-                                    </td>
-                                    <td>{{ inspection.tread_depth }} mm</td>
-                                    <td>{{ inspection.working_hours }} hrs</td>
-                                    <td>
-                                        <span class="badge {% if inspection.requires_immediate_attention %}bg-danger{% else %}bg-success{% endif %}">
-                                            {{ inspection.requires_immediate_attention|yesno:"Yes,No" }}
-                                        </span>
-                                    </td>
-                                    <td>
-                                        {% if inspection.notes %}
-                                        <button type="button" 
-                                                class="btn btn-sm btn-outline-info"
-                                                data-bs-toggle="tooltip"
-                                                data-bs-placement="left"
-                                                title="{{ inspection.notes }}">
-                                            <i class="fas fa-info-circle"></i>
-                                        </button>
-                                        {% endif %}
-                                    </td>
-                                </tr>
-                                {% empty %}
-                                <tr>
-                                    <td colspan="7" class="text-center">No inspection records found</td>
-                                </tr>
-                                {% endfor %}
+                                {% if inspections %}
+                                    {% for inspection in inspections %}
+                                    <tr>
+                                        <td>{{ inspection.inspection_date|date:"M d, Y H:i" }}</td>
+                                        <td>{{ inspection.expert.username }}</td>
+                                        <td>{{ inspection.condition_rating }}/5</td>
+                                        <td>{{ inspection.tread_depth }} mm</td>
+                                        <td>{{ inspection.working_hours }} hrs</td>
+                                        <td>
+                                            <span class="badge {% if inspection.requires_immediate_attention %}bg-danger{% else %}bg-success{% endif %}">
+                                                {{ inspection.requires_immediate_attention|yesno:"Yes,No" }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            {% if inspection.notes %}
+                                                {{ inspection.notes }}
+                                            {% else %}
+                                                -
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                {% else %}
+                                    <tr>
+                                        <td colspan="7" class="text-center">No inspection records found</td>
+                                    </tr>
+                                {% endif %}
                             </tbody>
                         </table>
                     </div>
@@ -168,7 +160,7 @@
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h6 class="card-title mb-0">Repair History</h6>
-                    <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#repairModal">
+                    <button class="btn btn-primary btn-sm" data-toggle="modal" data-target="#repairModal">
                         <i class="fas fa-plus me-1"></i>Request Repair
                     </button>
                 </div>
@@ -185,33 +177,35 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                {% for repair in repairs %}
-                                <tr>
-                                    <td>{{ repair.request_date|date:"M d, Y" }}</td>
-                                    <td>{{ repair.requested_by.username }}</td>
-                                    <td>
-                                        <span class="badge 
-                                            {% if repair.status == 'PENDING' %}bg-warning
-                                            {% elif repair.status == 'APPROVED' %}bg-success
-                                            {% elif repair.status == 'REJECTED' %}bg-danger
-                                            {% else %}bg-info{% endif %}">
-                                            {{ repair.get_status_display }}
-                                        </span>
-                                    </td>
-                                    <td>{{ repair.description }}</td>
-                                    <td>
-                                        {% if repair.completion_date %}
-                                        {{ repair.completion_date|date:"M d, Y" }}
-                                        {% else %}
-                                        -
-                                        {% endif %}
-                                    </td>
-                                </tr>
-                                {% empty %}
-                                <tr>
-                                    <td colspan="5" class="text-center">No repair records found</td>
-                                </tr>
-                                {% endfor %}
+                                {% if repairs %}
+                                    {% for repair in repairs %}
+                                    <tr>
+                                        <td>{{ repair.request_date|date:"M d, Y" }}</td>
+                                        <td>{{ repair.requested_by.username }}</td>
+                                        <td>
+                                            <span class="badge 
+                                                {% if repair.status == 'PENDING' %}bg-warning
+                                                {% elif repair.status == 'APPROVED' %}bg-success
+                                                {% elif repair.status == 'REJECTED' %}bg-danger
+                                                {% else %}bg-info{% endif %}">
+                                                {{ repair.get_status_display }}
+                                            </span>
+                                        </td>
+                                        <td>{{ repair.description }}</td>
+                                        <td>
+                                            {% if repair.completion_date %}
+                                                {{ repair.completion_date|date:"M d, Y" }}
+                                            {% else %}
+                                                -
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                {% else %}
+                                    <tr>
+                                        <td colspan="5" class="text-center">No repair records found</td>
+                                    </tr>
+                                {% endif %}
                             </tbody>
                         </table>
                     </div>
@@ -228,9 +222,11 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title">Update Tire Status</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
             </div>
-            <form method="post" action="{% url 'tire_status_update' %}">
+            <form method="post" action="{% url 'tire_status_update' %}" id="statusUpdateForm">
                 {% csrf_token %}
                 <input type="hidden" name="tire_ids" value="{{ tire.id }}">
                 <div class="modal-body">
@@ -250,7 +246,7 @@
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
                     <button type="submit" class="btn btn-primary">Update Status</button>
                 </div>
             </form>
@@ -263,16 +259,52 @@
 
 {% block extra_js %}
 <script>
-$(document).ready(function() {
-    // Initialize DataTables
-    $('#inspectionsTable, #repairsTable').DataTable({
-        "order": [[0, "desc"]],
-        "pageLength": 5,
-        "lengthChange": false
+document.addEventListener('DOMContentLoaded', function() {
+    // Handle status update form submission
+    $('#statusUpdateForm').on('submit', function(e) {
+        e.preventDefault();
+        $.ajax({
+            url: $(this).attr('action'),
+            method: 'POST',
+            data: $(this).serialize(),
+            success: function(response) {
+                if (response.success) {
+                    $('#statusModal').modal('hide');
+                    // Reload the page to show updated status
+                    location.reload();
+                }
+            },
+            error: function(xhr) {
+                alert('Failed to update status');
+            }
+        });
     });
+    
+    setTimeout(function() {
+        try {
+            // Initialize inspectionsTable if it has data
+            if ($('#inspectionsTable').length && $('#inspectionsTable tbody tr').length > 1) {
+                $('#inspectionsTable').DataTable({
+                    paging: true,
+                    searching: false,
+                    info: false,
+                    pageLength: 5
+                });
+            }
 
-    // Initialize tooltips
-    $('[data-bs-toggle="tooltip"]').tooltip();
+            // Initialize repairsTable if it has data
+            if ($('#repairsTable').length && $('#repairsTable tbody tr').length > 1) {
+                $('#repairsTable').DataTable({
+                    paging: true,
+                    searching: false,
+                    info: false,
+                    pageLength: 5
+                });
+            }
+        } catch (error) {
+            console.error('DataTables Error:', error);
+        }
+    }, 100);
 });
 </script>
 {% endblock %}

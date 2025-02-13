@@ -1,6 +1,7 @@
 from django.core.management.base import BaseCommand
 from django.core.management import call_command
 from apps.accounts.models import User
+from django.db import connection
 
 class Command(BaseCommand):
     help = 'Seed the database with sample data'
@@ -15,21 +16,40 @@ class Command(BaseCommand):
     def handle(self, *args, **kwargs):
         if kwargs['force']:
             self.stdout.write('Clearing existing data...')
-            User.objects.all().delete()
+            # Get list of all tables
+            tables = connection.introspection.table_names()
+            excluded_tables = ['django_migrations', 'django_content_type', 'django_session']
+            
+            with connection.cursor() as cursor:
+                # Disable foreign key checks
+                if connection.vendor == 'postgresql':
+                    cursor.execute('SET CONSTRAINTS ALL DEFERRED;')
+                
+                # Clear each table
+                for table in tables:
+                    if table not in excluded_tables:
+                        self.stdout.write(f'Clearing table: {table}')
+                        cursor.execute(f'TRUNCATE TABLE "{table}" CASCADE;')
+                
+                # Re-enable foreign key checks
+                if connection.vendor == 'postgresql':
+                    cursor.execute('SET CONSTRAINTS ALL IMMEDIATE;')
+            
             self.stdout.write('Existing data cleared.')
 
         try:
-            # Load fixtures
+            # Load fixtures in order of dependencies
             fixtures = [
-                'users.json',
-                'categories.json',
-                'tires.json',
-                'warranties.json',
-                'repair_requests.json',
-                'technical_reports.json',
-                'training_categories.json',
-                'trainings.json',
-                'training_requests.json'
+                'users.json',           # Base users
+                'categories.json',      # Tire categories
+                'tire_models.json',     # Tire models (depends on categories)
+                'tires.json',          # Tires (depends on models and users)
+                'warranties.json',      # Warranties (depends on tires)
+                'repair_requests.json', # Repair requests (depends on tires)
+                'technical_reports.json', # Tech reports (depends on tires)
+                'training_categories.json', # Training categories
+                'trainings.json',      # Training content
+                'training_requests.json' # Training requests
             ]
 
             for fixture in fixtures:
@@ -40,22 +60,32 @@ class Command(BaseCommand):
                 except Exception as e:
                     self.stdout.write(self.style.ERROR(f'Failed to load {fixture}: {str(e)}'))
 
-            # Set different passwords and verify emails for different users
-            user_data = {
-                'admin_user': {'password': 'admin123', 'email_verified': True},
-                'miner_user': {'password': 'miner123', 'email_verified': True},
-                'technical_user': {'password': 'technical123', 'email_verified': True}
+            # Set passwords for users using phone numbers
+            user_passwords = {
+                '09121111111': 'admin123',
+                '09122222222': 'miner123',
+                '09123333333': 'miner123',
+                '09124444444': 'technical123'
             }
 
-            for username, data in user_data.items():
+            for phone, password in user_passwords.items():
                 try:
-                    user = User.objects.get(username=username)
-                    user.set_password(data['password'])
-                    user.email_verified = data['email_verified']
+                    user = User.objects.get(phone=phone)
+                    user.set_password(password)
                     user.save()
-                    self.stdout.write(self.style.SUCCESS(f'Updated user {username}'))
+                    
+                    # Verify password was set correctly
+                    if user.check_password(password):
+                        self.stdout.write(self.style.SUCCESS(
+                            f'Successfully set and verified password for user {phone}'
+                        ))
+                    else:
+                        self.stdout.write(self.style.ERROR(
+                            f'Password verification failed for user {phone}'
+                        ))
+                        
                 except User.DoesNotExist:
-                    self.stdout.write(self.style.ERROR(f'User {username} not found'))
+                    self.stdout.write(self.style.ERROR(f'User with phone {phone} not found'))
 
         except Exception as e:
             self.stdout.write(self.style.ERROR(f'Seeding failed: {str(e)}'))

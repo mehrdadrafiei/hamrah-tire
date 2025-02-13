@@ -313,32 +313,52 @@ def tire_detail(request, pk):
     return render(request, 'tire/tire_detail.html', {
         'tire': tire,
         'inspections': inspections,
-        'repairs': repairs
+        'repairs': repairs,
+        'status_choices': Tire.TIRE_STATUS_CHOICES,
     })
 
 @login_required
 @role_required(['ADMIN'])
 def tire_status_update(request):
-    """View for updating status of multiple tires"""
     if request.method == 'POST':
-        form = TireStatusUpdateForm(request.POST)
-        if form.is_valid():
-            try:
-                with transaction.atomic():
-                    status = form.cleaned_data['status']
-                    tire_ids = form.cleaned_data['tire_ids']
-                    
-                    updated = Tire.objects.filter(id__in=tire_ids).update(status=status)
-                    messages.success(request, f'Successfully updated {updated} tires.')
-                    
-                    # Record status change in history if needed
-                    # This could be implemented with a separate TireStatusHistory model
-                    
-                return JsonResponse({'success': True, 'updated_count': updated})
-            except Exception as e:
-                return JsonResponse({'error': str(e)}, status=400)
-        return JsonResponse({'error': 'Invalid form data'}, status=400)
-    return JsonResponse({'error': 'Invalid request method'}, status=405)
+        tire_ids = request.POST.getlist('tire_ids[]', request.POST.get('tire_ids', '').split(','))
+        status = request.POST.get('status')
+
+        if not tire_ids or not status:
+            return JsonResponse({
+                'error': 'Missing tire IDs or status'
+            }, status=400)
+
+        try:
+            # Clean the tire IDs list
+            tire_ids = [int(tid.strip()) for tid in tire_ids if tid.strip()]
+            
+            # Validate status
+            if status not in dict(Tire.TIRE_STATUS_CHOICES):
+                return JsonResponse({
+                    'error': 'Invalid status value'
+                }, status=400)
+
+            # Update tires
+            updated_count = Tire.objects.filter(id__in=tire_ids).update(status=status)
+
+            return JsonResponse({
+                'success': True,
+                'updated_count': updated_count
+            })
+
+        except ValueError:
+            return JsonResponse({
+                'error': 'Invalid tire ID format'
+            }, status=400)
+        except Exception as e:
+            return JsonResponse({
+                'error': str(e)
+            }, status=400)
+
+    return JsonResponse({
+        'error': 'Invalid request method'
+    }, status=405)
 
 @login_required
 def tire_dashboard(request):
@@ -482,6 +502,29 @@ def report_list_view(request):
     }
     return render(request, 'tire/report_list.html', context)
 
+
+@login_required
+@role_required(['ADMIN'])
+def tire_edit(request, pk):
+   """View for editing an individual tire"""
+   tire = get_object_or_404(Tire, pk=pk)
+   
+   if request.method == 'POST':
+       form = TireForm(request.POST, instance=tire)
+       if form.is_valid():
+           form.save()
+           messages.success(request, 'Tire updated successfully.')
+           return redirect('tire:tire_list')
+   else:
+       form = TireForm(instance=tire)
+
+   context = {
+       'form': form,
+       'tire': tire,
+       'title': f'Edit Tire - {tire.serial_number}'
+   }
+   
+   return render(request, 'tire/tire_form.html', context)
 # ------------------------------
 # ---- Training Admin Views ----
 # ------------------------------

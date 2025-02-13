@@ -1,0 +1,53 @@
+[
+    {
+        "model": "tire.tiremodel",
+        "pk": 1,
+        "fields": {
+            "name": "Premium Mining Tire",
+            "brand": "GoodYear",
+            "pattern": "Mining-Pro",
+            "compound": "Heavy Duty",
+            "model": "MP-2024",
+            "size": "24.00R35",
+            "manufacturer": "GoodYear",
+            "description": "Heavy duty mining tire for extreme conditions",
+            "category": 1,
+            "is_active": true,
+            "initial_tread_depth": 25.0
+        }
+    },
+    {
+        "model": "tire.tiremodel",
+        "pk": 2,
+        "fields": {
+            "name": "Standard Mining Tire",
+            "brand": "Michelin",
+            "pattern": "Mine-X",
+            "compound": "Standard",
+            "model": "MX-2024",
+            "size": "21.00R33",
+            "manufacturer": "Michelin",
+            "description": "Standard mining tire for regular use",
+            "category": 1,
+            "is_active": true,
+            "initial_tread_depth": 20.0
+        }
+    },
+    {
+        "model": "tire.tiremodel",
+        "pk": 3,
+        "fields": {
+            "name": "Economy Mining Tire",
+            "brand": "Bridgestone",
+            "pattern": "Eco-Mine",
+            "compound": "Economy",
+            "model": "EM-2024",
+            "size": "18.00R33",
+            "manufacturer": "Bridgestone",
+            "description": "Cost-effective mining tire solution",
+            "category": 1,
+            "is_active": true,
+            "initial_tread_depth": 18.0
+        }
+    }
+]

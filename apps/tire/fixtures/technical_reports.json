@@ -5,12 +5,13 @@
         "fields": {
             "tire": 1,
             "expert": 4,
-            "inspection_date": "2024-01-15T09:00:00Z",
+            "inspection_date": "2024-02-01T10:00:00Z",
             "tread_depth": 15.5,
             "working_hours": 1000,
             "condition_rating": 4,
-            "notes": "Normal wear pattern observed",
-            "requires_immediate_attention": false
+            "notes": "Good condition overall",
+            "requires_immediate_attention": false,
+            "resolved": false
         }
     },
     {
@@ -19,12 +20,13 @@
         "fields": {
             "tire": 2,
             "expert": 4,
-            "inspection_date": "2024-02-01T11:30:00Z",
-            "tread_depth": 18.0,
-            "working_hours": 500,
+            "inspection_date": "2024-02-01T11:00:00Z",
+            "tread_depth": 12.5,
+            "working_hours": 1500,
             "condition_rating": 3,
-            "notes": "Minor sidewall damage noticed",
-            "requires_immediate_attention": true
+            "notes": "Minor wear detected",
+            "requires_immediate_attention": false,
+            "resolved": false
         }
     }
 ]

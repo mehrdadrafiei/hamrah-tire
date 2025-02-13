@@ -72,8 +72,6 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'config.wsgi.application'
 
-# Custom user model
-AUTH_USER_MODEL = 'accounts.User'
 
 # Internationalization
 LANGUAGE_CODE = 'en-us'
@@ -177,6 +175,18 @@ SESSION_COOKIE_AGE = 86400  # 24 hours in seconds
 SESSION_COOKIE_SECURE = True  # Only send cookie over HTTPS
 SESSION_COOKIE_HTTPONLY = True  # Prevent JavaScript access to session cookie
 SESSION_COOKIE_SAMESITE = 'Lax'  # Protects against CSRF
+
+AUTHENTICATION_BACKENDS = [
+    'apps.accounts.authentication.PhoneNumberAuthBackend',
+    'django.contrib.auth.backends.ModelBackend',  # Keep the default backend as fallback
+]
+
+# Custom authentication settings
+AUTH_USER_MODEL = 'accounts.User'
+LOGIN_URL = 'login'
+LOGIN_REDIRECT_URL = 'dashboard'
+LOGOUT_REDIRECT_URL = 'login'
+
 
 # Password validation settings
 AUTH_PASSWORD_VALIDATORS = [

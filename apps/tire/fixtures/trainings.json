@@ -4,13 +4,13 @@
         "pk": 1,
         "fields": {
             "title": "Basic Tire Maintenance",
-            "description": "Learn the basics of tire maintenance",
-            "video_url": "https://www.aparat.com//video1.mp4",
-            "thumbnail_url": "https://www.aparat.com//thumbnail1.jpg",
+            "description": "Learn the basics of tire maintenance and care",
             "category": 1,
+            "video_url": "https://www.aparat.com/v/example1",
+            "thumbnail_url": "https://www.example.com/thumb1.jpg",
+            "created_at": "2024-02-01T10:00:00Z",
+            "updated_at": "2024-02-01T10:00:00Z",
             "uploaded_by": 1,
-            "created_at": "2023-06-01T10:00:00Z",
-            "updated_at": "2023-06-01T10:00:00Z",
             "is_active": true,
             "view_count": 0
         }
@@ -19,15 +19,15 @@
         "model": "tire.training",
         "pk": 2,
         "fields": {
-            "title": "Tire Safety Essentials",
-            "description": "Essential safety procedures for tire handling",
-            "video_url": "https://www.aparat.com//video2.mp4",
-            "thumbnail_url": "https://www.aparat.com//thumbnail2.jpg",
+            "title": "Advanced Tire Inspection",
+            "description": "Advanced techniques for tire inspection",
             "category": 2,
+            "video_url": "https://www.aparat.com/v/example2",
+            "thumbnail_url": "https://www.example.com/thumb2.jpg",
+            "created_at": "2024-02-01T11:00:00Z",
+            "updated_at": "2024-02-01T11:00:00Z",
             "uploaded_by": 1,
-            "created_at": "2023-06-02T11:00:00Z",
-            "updated_at": "2023-06-02T11:00:00Z",
-            "is_active": false,
+            "is_active": true,
             "view_count": 0
         }
     }

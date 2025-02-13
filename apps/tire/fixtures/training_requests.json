@@ -5,11 +5,11 @@
         "fields": {
             "user": 2,
             "category": 1,
-            "title": "Tire Maintenance Consultation",
-            "description": "I would like to learn more about tire maintenance",
+            "title": "Request for Advanced Tire Maintenance Training",
+            "description": "Need training on advanced tire maintenance procedures",
             "status": "PENDING",
-            "created_at": "2024-06-03T09:00:00Z",
-            "updated_at": "2024-06-03T09:00:00Z",
+            "created_at": "2024-02-01T10:00:00Z",
+            "updated_at": "2024-02-01T10:00:00Z",
             "approved_by": null,
             "approved_at": null,
             "notes": ""
@@ -19,13 +19,29 @@
         "model": "tire.trainingrequest",
         "pk": 2,
         "fields": {
-            "user": 3,
+            "user": 2,
             "category": 2,
-            "title": "Tire Safety Consultation",
-            "description": "I would like to learn more about tire safety",
+            "title": "Safety Procedures Training Request",
+            "description": "Request for comprehensive safety procedures training",
             "status": "APPROVED",
-            "created_at": "2024-06-04T10:00:00Z",
-            "updated_at": "2024-06-04T10:30:00Z",
+            "created_at": "2024-02-01T11:00:00Z",
+            "updated_at": "2024-02-01T12:00:00Z",
+            "approved_by": 1,
+            "approved_at": "2024-02-01T12:00:00Z",
+            "notes": "Approved for next training session"
+        }
+    },
+    {
+        "model": "tire.trainingrequest",
+        "pk": 3,
+        "fields": {
+            "user": 3,
+            "category": 1,
+            "title": "Tire Inspection Training",
+            "description": "Need training on proper tire inspection techniques",
+            "status": "PENDING",
+            "created_at": "2024-02-02T10:00:00Z",
+            "updated_at": "2024-02-02T10:00:00Z",
             "approved_by": null,
             "approved_at": null,
             "notes": ""

@@ -79,14 +79,14 @@
                                 <input type="checkbox" class="form-check-input" id="selectAll">
                             </th>
                             {% endif %}
-                            <th>Serial Number</th>
-                            <th>Model</th>
-                            <th>Brand</th>
-                            <th>Size</th>
-                            <th>Owner</th>
-                            <th>Status</th>
-                            <th>Working Hours</th>
-                            <th>Last Inspection</th>
+                            <th data-filter="serial_number">Serial Number</th>
+                            <th data-filter="model">Model</th>
+                            <th data-filter="brand">Brand</th>
+                            <th data-filter="size">Size</th>
+                            <th data-filter="owner">Owner</th>
+                            <th data-filter="status">Status</th>
+                            <th data-filter="working_hours">Working Hours</th>
+                            <th data-filter="last_inspection">Last Inspection</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
@@ -171,9 +171,9 @@
                     <div class="form-group">
                         <label class="form-label">New Status</label>
                         <select name="status" class="form-select" required>
-                            {% for value, label in status_choices %}
-                            <option value="{{ value }}">{{ label }}</option>
-                            {% endfor %}
+                            <option value="IN_WAREHOUSE">In Warehouse</option>
+                            <option value="IN_USE">In Use</option>
+                            <option value="DISPOSED">Disposed</option>
                         </select>
                     </div>
                 </div>
@@ -241,6 +241,7 @@ $(document).ready(function() {
             return $(this).val();
         }).get();
         
+        // Join IDs with commas and store in hidden input
         $('#tireIds').val(selectedIds.join(','));
         $('#statusModal').modal('show');
     });
@@ -249,39 +250,44 @@ $(document).ready(function() {
     $('#statusUpdateForm').on('submit', function(e) {
         e.preventDefault();
         
+        const formData = new FormData(this);
+        // Convert comma-separated string back to array if needed
+        const tireIds = formData.get('tire_ids').split(',');
+        
         $.ajax({
             url: '{% url "tire_status_update" %}',
             method: 'POST',
-            data: $(this).serialize(),
+            data: {
+                'tire_ids': tireIds,
+                'status': formData.get('status'),
+                'csrfmiddlewaretoken': formData.get('csrfmiddlewaretoken')
+            },
             success: function(response) {
-                $('#statusModal').modal('hide');
-                window.location.reload();
+                if (response.success) {
+                    $('#statusModal').modal('hide');
+                    location.reload();
+                }
             },
             error: function(xhr) {
-                alert('Error updating status: ' + xhr.responseJSON?.error || 'Unknown error occurred');
+                alert('Error updating status: ' + (xhr.responseJSON?.error || 'Unknown error occurred'));
             }
         });
     });
-
     // Handle filters
     $('#filterForm').on('submit', function(e) {
         e.preventDefault();
         const formData = new FormData(this);
-        const filters = {};
         
-        for (const [key, value] of formData.entries()) {
-            if (value) filters[key] = value;
-        }
-        
-        // Apply filters to DataTable
-        table.columns().every(function(index) {
-            const column = this;
-            const filterValue = filters[column.header().textContent.toLowerCase().trim()];
+        table.columns().every(function(i) {
+            const columnName = $(this.header()).text().toLowerCase().trim();
+            const filterValue = formData.get(columnName);
             
             if (filterValue) {
-                column.search(filterValue).draw();
+                table.column(i).search(filterValue);
             }
         });
+        
+        table.draw();
     });
 
     $('#clearFilters').on('click', function() {

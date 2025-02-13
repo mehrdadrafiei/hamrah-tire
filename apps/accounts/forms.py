@@ -2,15 +2,17 @@ from django.utils import timezone
 from django import forms
 from django.conf import settings
 from django.contrib.auth.forms import PasswordChangeForm
-from django.contrib.auth import authenticate
 from .models import User
 from apps.tire.models import Tire, RepairRequest, TechnicalReport
 from django.contrib.auth.password_validation import validate_password
 from django.core.mail import send_mail
+from django.contrib.auth import get_user_model
+
+User = get_user_model()
 
 class UserLoginForm(forms.Form):
-    username = forms.CharField(widget=forms.TextInput(
-        attrs={'class': 'form-control', 'placeholder': 'Username'}
+    phone = forms.CharField(widget=forms.TextInput(
+        attrs={'class': 'form-control', 'placeholder': 'Phone Number'}
     ))
     password = forms.CharField(widget=forms.PasswordInput(
         attrs={'class': 'form-control', 'placeholder': 'Password'}
@@ -18,48 +20,103 @@ class UserLoginForm(forms.Form):
     remember_me = forms.BooleanField(required=False)
 
     def clean(self):
-        username = self.cleaned_data.get('username')
+        phone = self.cleaned_data.get('phone')
         password = self.cleaned_data.get('password')
         
-        if username and password:
-            user = authenticate(username=username, password=password)
-            if not user:
-                raise forms.ValidationError('Invalid username or password.')
-            if not user.is_active:
-                raise forms.ValidationError('This account is inactive.')
-            if not user.email_verified:
-                raise forms.ValidationError('Please verify your email address.')
+        if phone and password:
+            try:
+                user = User.objects.get(phone=phone)
+                if not user.check_password(password):
+                    raise forms.ValidationError('Invalid phone number or password.')
+                if not user.is_active:
+                    raise forms.ValidationError('This account is inactive.')
+            except User.DoesNotExist:
+                raise forms.ValidationError('Invalid phone number or password.')
             
         return self.cleaned_data
 
-    def get_user(self):
-        username = self.cleaned_data.get('username')
+class UserAdminForm(forms.ModelForm):
+    password = forms.CharField(
+        widget=forms.PasswordInput(attrs={'class': 'form-control'}),
+        required=False,
+        help_text='Leave empty if not changing.'
+    )
+
+    class Meta:
+        model = User
+        fields = [
+            'phone', 'email', 'password', 'role', 'is_active',
+            'first_name', 'last_name', 'national_id', 'birth_date',
+            'alternative_phone', 'address', 'city', 'province', 'postal_code',
+            'company_name', 'job_title', 'department', 'employee_id', 'hire_date',
+            'instagram', 'twitter', 'telegram', 'youtube', 'bale', 'eitaa'
+        ]
+        widgets = {
+            'phone': forms.TextInput(attrs={'class': 'form-control'}),
+            'email': forms.EmailInput(attrs={'class': 'form-control'}),
+            'role': forms.Select(attrs={'class': 'form-control'}),
+            'first_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'last_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'national_id': forms.TextInput(attrs={'class': 'form-control'}),
+            'birth_date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+            'alternative_phone': forms.TextInput(attrs={'class': 'form-control'}),
+            'address': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'city': forms.TextInput(attrs={'class': 'form-control'}),
+            'province': forms.TextInput(attrs={'class': 'form-control'}),
+            'postal_code': forms.TextInput(attrs={'class': 'form-control'}),
+            'company_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'job_title': forms.TextInput(attrs={'class': 'form-control'}),
+            'department': forms.TextInput(attrs={'class': 'form-control'}),
+            'employee_id': forms.TextInput(attrs={'class': 'form-control'}),
+            'hire_date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+            'instagram': forms.URLInput(attrs={'class': 'form-control'}),
+            'twitter': forms.URLInput(attrs={'class': 'form-control'}),
+            'telegram': forms.URLInput(attrs={'class': 'form-control'}),
+            'youtube': forms.URLInput(attrs={'class': 'form-control'}),
+            'bale': forms.URLInput(attrs={'class': 'form-control'}),
+            'eitaa': forms.URLInput(attrs={'class': 'form-control'}),
+        }
+
+    def clean_phone(self):
+        phone = self.cleaned_data['phone']
+        if User.objects.exclude(pk=self.instance.pk).filter(phone=phone).exists():
+            raise forms.ValidationError('This phone number is already in use.')
+        return phone
+
+    def save(self, commit=True):
+        user = super().save(commit=False)
         password = self.cleaned_data.get('password')
-        return authenticate(username=username, password=password)
+        if password:
+            user.set_password(password)
+        if commit:
+            user.save()
+        return user
 
 class UserProfileForm(forms.ModelForm):
     class Meta:
         model = User
-        fields = ['first_name', 'last_name', 'email', 'phone', 
-                 'instagram', 'twitter', 'telegram', 'youtube', 'bale', 'eitaa']
+        fields = [
+            'first_name', 'last_name', 'email', 'phone', 'alternative_phone',
+            'address', 'city', 'province', 'postal_code',
+            'instagram', 'twitter', 'telegram', 'youtube', 'bale', 'eitaa'
+        ]
         widgets = {
             'first_name': forms.TextInput(attrs={'class': 'form-control'}),
             'last_name': forms.TextInput(attrs={'class': 'form-control'}),
             'email': forms.EmailInput(attrs={'class': 'form-control'}),
             'phone': forms.TextInput(attrs={'class': 'form-control'}),
-            'instagram': forms.URLInput(attrs={'class': 'form-control', 'placeholder': 'Instagram profile URL'}),
-            'twitter': forms.URLInput(attrs={'class': 'form-control', 'placeholder': 'X/Twitter profile URL'}),
-            'telegram': forms.URLInput(attrs={'class': 'form-control', 'placeholder': 'Telegram profile URL'}),
-            'youtube': forms.URLInput(attrs={'class': 'form-control', 'placeholder': 'YouTube channel URL'}),
-            'bale': forms.URLInput(attrs={'class': 'form-control', 'placeholder': 'Bale profile URL'}),
-            'eitaa': forms.URLInput(attrs={'class': 'form-control', 'placeholder': 'Eitaa profile URL'}),
+            'alternative_phone': forms.TextInput(attrs={'class': 'form-control'}),
+            'address': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'city': forms.TextInput(attrs={'class': 'form-control'}),
+            'province': forms.TextInput(attrs={'class': 'form-control'}),
+            'postal_code': forms.TextInput(attrs={'class': 'form-control'}),
+            'instagram': forms.URLInput(attrs={'class': 'form-control'}),
+            'twitter': forms.URLInput(attrs={'class': 'form-control'}),
+            'telegram': forms.URLInput(attrs={'class': 'form-control'}),
+            'youtube': forms.URLInput(attrs={'class': 'form-control'}),
+            'bale': forms.URLInput(attrs={'class': 'form-control'}),
+            'eitaa': forms.URLInput(attrs={'class': 'form-control'})
         }
-
-    def clean_email(self):
-        email = self.cleaned_data['email']
-        if User.objects.exclude(pk=self.instance.pk).filter(email=email).exists():
-            raise forms.ValidationError('This email is already in use.')
-        return email
 
 class CustomPasswordChangeForm(PasswordChangeForm):
     def __init__(self, *args, **kwargs):

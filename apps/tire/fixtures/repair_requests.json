@@ -3,11 +3,11 @@
         "model": "tire.repairrequest",
         "pk": 1,
         "fields": {
-            "tire": 2,
+            "tire": 1,
             "requested_by": 2,
-            "request_date": "2024-01-20T10:00:00Z",
-            "description": "Puncture repair needed",
-            "status": "IN_PROGRESS",
+            "request_date": "2024-02-01T10:00:00Z",
+            "description": "Tire damage on the sidewall",
+            "status": "PENDING",
             "approved_by": 1,
             "completion_date": null
         }
@@ -16,12 +16,12 @@
         "model": "tire.repairrequest",
         "pk": 2,
         "fields": {
-            "tire": 9,
+            "tire": 2,
             "requested_by": 3,
-            "request_date": "2024-02-15T14:30:00Z",
-            "description": "Tread wear inspection required",
-            "status": "PENDING",
-            "approved_by": null,
+            "request_date": "2024-02-01T11:00:00Z",
+            "description": "Puncture repair needed",
+            "status": "APPROVED",
+            "approved_by": 1,
             "completion_date": null
         }
     }

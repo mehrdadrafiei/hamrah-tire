@@ -81,8 +81,9 @@ urlpatterns = [
     # Tire Management
     # path('tires/', tire_views.tire_list_view, name='tire_list'),
     # path('tires/add/', tire_views.tire_add_view, name='tire_add'),
-    path('tires/<int:pk>/edit/', tire_views.tire_edit_view, name='tire_edit'),
+    #path('tires/<int:pk>/edit/', tire_views.tire_edit_view, name='tire_edit'),
     # path('tires/<int:pk>/delete/', tire_views.tire_delete_view, name='tire_delete'),
+    path('tires/<int:pk>/edit/', tire_views.tire_edit, name='tire_edit'),
 
     # Tire Model URLs (Catalog)
     path('models/', tire_views.tire_model_list, name='model_list'),
@@ -122,7 +123,7 @@ urlpatterns = [
     path('accounts/users/<int:user_id>/edit/', account_views.user_edit_view, name='user_edit'),
     path('accounts/users/<int:user_id>/activate/', account_views.user_activate_view, name='user_activate'),
     path('accounts/users/<int:user_id>/deactivate/', account_views.user_deactivate_view, name='user_deactivate'),
-    path('accounts/users/<int:user_id>/resend-verification/', account_views.resend_verification_email_view, name='resend_verification'),
+    #path('accounts/users/<int:user_id>/resend-verification/', account_views.resend_verification_email_view, name='resend_verification'),
     path('accounts/verify-email/<str:token>/', account_views.verify_email_view, name='verify_email'),
 
     # Training URLs
